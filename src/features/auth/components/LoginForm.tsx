@@ -15,6 +15,7 @@ import {
   StyleSheet,
   ActivityIndicator
 } from 'react-native';
+import { LoadingButton } from '../../../shared/components/ui/LoadingButton';
 
 export interface LoginFormProps {
   // Form state
@@ -157,19 +158,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         )}
 
         {/* Main Button */}
-        <TouchableOpacity
-          style={[styles.button, dynamicStyles.button]}
+        <LoadingButton
+          title={isSignUp ? '註冊' : '登入'}
           onPress={onSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={[styles.buttonText, dynamicStyles.buttonText]}>
-              {isSignUp ? '註冊' : '登入'}
-            </Text>
-          )}
-        </TouchableOpacity>
+          loading={loading}
+          variant="primary"
+          size="large"
+          fullWidth
+          loadingText={isSignUp ? '註冊中...' : '登入中...'}
+          style={[styles.button, dynamicStyles.button]}
+        />
 
         {/* Toggle Sign Up/Login */}
         <TouchableOpacity
