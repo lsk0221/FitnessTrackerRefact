@@ -234,7 +234,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 16,
   },
   buttonText: {
     fontSize: 16,
@@ -244,6 +243,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
+    marginTop: 12,
   },
   secondaryButtonText: {
     fontSize: 16,
