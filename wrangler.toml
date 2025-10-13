@@ -1,0 +1,8 @@
+name = "fitness-tracker-api"
+main = "cloudflare-worker-simple.js"
+compatibility_date = "2025-09-09"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fitness-tracker-db"
+database_id = "b0e87d36-d7a8-4d00-b7e7-f113d578f24b"
