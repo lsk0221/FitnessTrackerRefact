@@ -188,3 +188,4 @@ This project is licensed under the MIT License.
 ---
 
 *Built with ❤️ using modern React Native patterns and best practices.*
+

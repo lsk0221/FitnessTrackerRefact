@@ -98,3 +98,4 @@ export type NavigationEvent = {
   target: string;
   data?: any;
 };
+

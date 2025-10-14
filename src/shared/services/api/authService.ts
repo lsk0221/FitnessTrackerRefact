@@ -36,15 +36,19 @@ export interface RegisterCredentials {
 /**
  * Sign in with email and password
  * 使用電子郵件和密碼登入
+ * 
+ * @param credentials - 登入憑證 {email, password}
+ * @returns Promise<AuthResult> - 包含用戶資料和令牌的結果
  */
 export const loginWithEmail = async (credentials: LoginCredentials): Promise<AuthResult> => {
   try {
     console.log('開始 Email 登入...');
     
+    // 調用 Cloudflare Auth 服務進行登入
     const result = await cloudflareAuth.login(credentials.email, credentials.password);
     console.log('登入成功，用戶資料:', result.user);
     
-    // 保存用戶資料到本地存儲
+    // 保存用戶資料到本地存儲，用於離線訪問
     await AsyncStorage.setItem('user_profile', JSON.stringify(result.user));
     console.log('用戶資料已保存到本地存儲');
     
@@ -293,3 +297,4 @@ export const initializeAuth = async (): Promise<User | null> => {
     console.log('=== 認證初始化完成 ===');
   }
 };
+

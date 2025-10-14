@@ -18,32 +18,33 @@ import {
 } from 'react-native';
 
 interface LoadingButtonProps {
-  title: string;
-  onPress: () => void;
-  loading?: boolean;
-  disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'small' | 'medium' | 'large';
-  fullWidth?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
-  loadingText?: string;
-  testID?: string;
+  title: string; // 按鈕文字
+  onPress: () => void; // 點擊事件處理函數
+  loading?: boolean; // 載入狀態
+  disabled?: boolean; // 禁用狀態
+  variant?: 'primary' | 'secondary' | 'danger'; // 按鈕樣式變體
+  size?: 'small' | 'medium' | 'large'; // 按鈕尺寸
+  fullWidth?: boolean; // 是否全寬度
+  style?: ViewStyle; // 自定義樣式
+  textStyle?: TextStyle; // 自定義文字樣式
+  loadingText?: string; // 載入時顯示的文字
+  testID?: string; // 測試識別符
 }
 
 export const LoadingButton: React.FC<LoadingButtonProps> = ({
   title,
   onPress,
-  loading = false,
-  disabled = false,
-  variant = 'primary',
-  size = 'medium',
-  fullWidth = false,
+  loading = false, // 預設不載入
+  disabled = false, // 預設不禁用
+  variant = 'primary', // 預設主要樣式
+  size = 'medium', // 預設中等尺寸
+  fullWidth = false, // 預設不全寬度
   style,
   textStyle,
   loadingText,
   testID
 }) => {
+  // 計算按鈕是否應該被禁用（載入中或手動禁用）
   const isDisabled = disabled || loading;
 
   const getButtonStyle = (): ViewStyle => {
@@ -160,3 +161,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoadingButton;
+

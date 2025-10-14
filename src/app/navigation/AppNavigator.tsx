@@ -13,12 +13,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 
-// Shared components
+// Shared components - 共享組件
 import { WorkoutIcon, ProgressIcon, ProfileIcon, SettingsIcon, HistoryIcon } from '../../shared/components/navigation/TabIcons';
-import { useTheme } from '../../shared/contexts/ThemeContext';
-import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext';
+import { useTheme } from '../../shared/contexts/ThemeContext'; // 主題上下文
+import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext'; // 認證上下文
 
 // Screen imports (temporary placeholders - will be replaced with actual features)
+// 畫面導入（臨時佔位符 - 將被實際功能取代）
 import { ProgressChartScreenPlaceholder } from '../../screens/placeholders/ProgressChartScreenPlaceholder';
 import { TemplatesScreenPlaceholder } from '../../screens/placeholders/TemplatesScreenPlaceholder';
 import { TemplateEditorScreenPlaceholder } from '../../screens/placeholders/TemplateEditorScreenPlaceholder';
@@ -29,12 +30,12 @@ import { HistoryScreenPlaceholder } from '../../screens/placeholders/HistoryScre
 import { ProfileScreenPlaceholder } from '../../screens/placeholders/ProfileScreenPlaceholder';
 import { SettingsScreenPlaceholder } from '../../screens/placeholders/SettingsScreenPlaceholder';
 
-// Real Authentication Screen
+// Real Authentication Screen - 真實認證畫面
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
 
-// Create navigators
-const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+// Create navigators - 創建導航器
+const Tab = createBottomTabNavigator(); // 底部標籤導航器
+const Stack = createStackNavigator(); // 堆疊導航器
 
 /**
  * Workout Flow Stack Navigator
