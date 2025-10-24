@@ -25,7 +25,7 @@ export interface LoginFormProps {
   isSignUp: boolean;
   loading: boolean;
   error: string | null;
-  
+
   // Form handlers
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
@@ -34,7 +34,7 @@ export interface LoginFormProps {
   onSubmit: () => void;
   onSkip: () => void;
   onClearError: () => void;
-  
+
   // Theme
   theme: any;
 }

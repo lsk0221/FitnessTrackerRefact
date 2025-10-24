@@ -7,7 +7,8 @@
  */
 
 module.exports = {
-  preset: 'react-native',
+  // preset: 'react-native', // Temporarily disabled due to Flow syntax issues
+  testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
@@ -15,7 +16,7 @@ module.exports = {
     '<rootDir>/build/',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@testing-library)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|@testing-library|react-test-renderer)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testMatch: [
@@ -36,7 +37,7 @@ module.exports = {
       statements: 70,
     },
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@features/(.*)$': '<rootDir>/src/features/$1',

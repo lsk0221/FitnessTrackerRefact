@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Export API Base URL for easy access
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://fitness-tracker-api.fitness-tracker.workers.dev';
+
 // Cloudflare 認證配置
 const CLOUDFLARE_CONFIG = {
   // Cloudflare Workers 端點
-  API_BASE_URL: 'https://fitness-tracker-api.fitness-tracker.workers.dev',
+  // Read from environment variable with fallback to hardcoded URL
+  API_BASE_URL,
   
   // 認證端點
   ENDPOINTS: {

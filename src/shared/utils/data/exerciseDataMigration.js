@@ -3,7 +3,7 @@
  * Exercise Data Migration Utility
  */
 
-import { findExerciseKeyByChineseName, findExerciseKeyByEnglishName } from '../data/exerciseMapping';
+import { findExerciseKeyByChineseName, findExerciseKeyByEnglishName } from '../../data/exerciseMapping';
 
 /**
  * 遷移訓練數據中的訓練動作名稱

@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../../constants';
 
 // 舊格式到新格式的映射
 const MUSCLE_GROUP_MAPPING = {

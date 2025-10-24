@@ -26,12 +26,12 @@ import { TemplateEditorScreenPlaceholder } from '../../screens/placeholders/Temp
 import { WorkoutLobbyScreenPlaceholder } from '../../screens/placeholders/WorkoutLobbyScreenPlaceholder';
 import { LiveModeScreenPlaceholder } from '../../screens/placeholders/LiveModeScreenPlaceholder';
 import { QuickLogScreenPlaceholder } from '../../screens/placeholders/QuickLogScreenPlaceholder';
-import { HistoryScreenPlaceholder } from '../../screens/placeholders/HistoryScreenPlaceholder';
 import { ProfileScreenPlaceholder } from '../../screens/placeholders/ProfileScreenPlaceholder';
 import { SettingsScreenPlaceholder } from '../../screens/placeholders/SettingsScreenPlaceholder';
 
-// Real Authentication Screen - 真實認證畫面
+// Real Feature Screens - 真實功能畫面
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
+import HistoryScreen from '../../features/workouts/screens/HistoryScreen';
 
 // Create navigators - 創建導航器
 const Tab = createBottomTabNavigator(); // 底部標籤導航器
@@ -107,7 +107,7 @@ const MainApp = () => {
       />
       <Tab.Screen 
         name="History" 
-        component={HistoryScreenPlaceholder}
+        component={HistoryScreen}
         options={{
           title: t('navigation.history'),
           tabBarIcon: ({ color }) => (

@@ -6,7 +6,8 @@
  * 全域測試配置和模擬
  */
 
-import '@testing-library/jest-native/extend-expect';
+// Temporarily disabled due to React Native parsing issues
+// import '@testing-library/jest-native/extend-expect';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({

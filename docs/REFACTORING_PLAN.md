@@ -214,7 +214,7 @@ src/
 | Feature/Module | Current Files | New Target Location | Refactoring Steps |
 |---|---|---|---|
 | ✅ **Authentication** | `src/contexts/CloudflareAuthContext.js`<br>`src/contexts/AuthContext.js`<br>`src/screens/LoginScreen.js`<br>`src/config/cloudflare.js` | `src/features/auth/` | ✅ **COMPLETED** - Extract login/register forms into components, create `useAuth` hook for logic, move API calls to `shared/services/authService.ts`, consolidate auth contexts. Fixed useCallback closure issues and dual authentication engine problem. |
-| **Workouts** | `src/hooks/useWorkouts.js`<br>`src/screens/HistoryScreen.js`<br>`src/components/WorkoutInputForm.js`<br>`src/utils/storage.js` | `src/features/workouts/` | Extract workout CRUD operations into `workoutService.ts`, create `useWorkoutHistory` hook, move calendar logic to `WorkoutHistory` component, separate data access from UI |
+| ✅ **Workouts** | `src/hooks/useWorkouts.js`<br>`src/screens/HistoryScreen.js`<br>`src/components/WorkoutInputForm.js`<br>`src/utils/storage.js` | `src/features/workouts/` | ✅ **COMPLETED** - Extracted workout CRUD operations into `workoutService.ts`, created `useWorkoutHistory` hook, separated calendar/list/modal components, implemented clean HistoryScreen container. All workout history features migrated successfully. |
 | **Templates** | `src/screens/TemplatesScreen.js`<br>`src/screens/TemplateEditorScreen.js`<br>`src/components/TemplateEditor.js`<br>`src/components/TemplateManagement.js`<br>`src/data/hardcodedData.js` | `src/features/templates/` | Extract template CRUD operations into `templateService.ts`, create `useTemplates` hook, move exercise library to `shared/data/`, separate template editor logic |
 | **Live Workout** | `src/screens/LiveModeScreen.js`<br>`src/components/LiveWorkout.js`<br>`src/components/SmartSwapModal.js` | `src/features/live-workout/` | Extract timer logic into `useWorkoutTimer` hook, create `SetTracker` component, move smart swap logic to `liveWorkoutService.ts`, separate UI from business logic |
 | **Quick Log** | `src/screens/QuickLogScreen.js`<br>`src/components/QuickLogWorkout.js` | `src/features/quick-log/` | Extract batch logging logic into `quickLogService.ts`, create `useQuickLog` hook, separate form components from screen logic |
@@ -256,8 +256,8 @@ src/
 
 ### **Phase 2: Core Features** (Priority Order)
 1. ✅ **Authentication** - Foundation for user management (COMPLETED)
-2. 🔄 **Workouts** - Core business logic (NEXT)
-3. **Templates** - Template management system
+2. ✅ **Workouts** - Core business logic (COMPLETED)
+3. 🔄 **Templates** - Template management system (NEXT)
 4. **Progress** - Data visualization
 
 ### **Phase 3: Advanced Features**
@@ -337,24 +337,33 @@ This plan provides a clear roadmap for transforming the current "vibe coding" st
 
 ### **🔄 Next Steps**
 
-#### **Workouts Feature - READY TO START**
-- **Priority**: High (core business logic)
-- **Estimated Time**: 2-3 days
-- **Key Components**:
-  - Workout CRUD operations
-  - Workout history management
-  - Calendar integration
-  - Data persistence and synchronization
+#### **Workouts Feature - COMPLETED ✅**
+- **Status**: Successfully refactored and integrated
+- **Files Created**:
+  - `src/features/workouts/types/workout.types.ts` - Type definitions
+  - `src/features/workouts/services/workoutService.ts` - Business logic and CRUD operations
+  - `src/features/workouts/hooks/useWorkoutHistory.ts` - State management hook
+  - `src/features/workouts/components/WorkoutCalendar.tsx` - Calendar component
+  - `src/features/workouts/components/WorkoutList.tsx` - Workout list component
+  - `src/features/workouts/components/WorkoutDetailModal.tsx` - Detail/edit modal
+  - `src/features/workouts/screens/HistoryScreen.tsx` - Clean container screen
+- **Functionality**:
+  - ✅ Workout CRUD operations with data migration support
+  - ✅ Calendar-based workout history visualization
+  - ✅ Add, edit, and delete workouts
+  - ✅ Multi-user support
+  - ✅ Unit conversion handling
+  - ✅ Data validation and error handling
 
 ### **📊 Progress Statistics**
 - **Total Features**: 8
-- **Completed**: 1 (Authentication)
+- **Completed**: 2 (Authentication, Workouts)
 - **In Progress**: 0
-- **Remaining**: 7
-- **Completion Rate**: 12.5%
+- **Remaining**: 6
+- **Completion Rate**: 25%
 
 ---
-*Refactoring Plan created on: $(date)*
+*Refactoring Plan created on: October 2024*
 *Total features identified: 12*
 *Migration phases: 4*
-*Last updated: Authentication feature completed*
+*Last updated: Workouts feature completed - Phase 2 Core Features in progress*
