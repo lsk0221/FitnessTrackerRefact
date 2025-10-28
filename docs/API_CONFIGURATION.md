@@ -280,3 +280,4 @@ curl https://fitness-tracker-api.fitness-tracker.workers.dev
 
 The app is now properly configured to use `https://fitness-tracker-api.fitness-tracker.workers.dev` as the backend API endpoint, with the flexibility to change it via environment variables when needed.
 
+

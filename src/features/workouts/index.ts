@@ -44,3 +44,4 @@ export { default as WorkoutDetailModal } from './components/WorkoutDetailModal';
 // Screens
 export { default as HistoryScreen } from './screens/HistoryScreen';
 
+

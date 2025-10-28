@@ -422,3 +422,4 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
 export default WorkoutDetailModal;
 
+
