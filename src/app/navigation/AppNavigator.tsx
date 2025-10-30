@@ -21,8 +21,6 @@ import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext';
 // Screen imports (temporary placeholders - will be replaced with actual features)
 // 畫面導入（臨時佔位符 - 將被實際功能取代）
 import { ProgressChartScreenPlaceholder } from '../../screens/placeholders/ProgressChartScreenPlaceholder';
-import { TemplatesScreenPlaceholder } from '../../screens/placeholders/TemplatesScreenPlaceholder';
-import { TemplateEditorScreenPlaceholder } from '../../screens/placeholders/TemplateEditorScreenPlaceholder';
 import { WorkoutLobbyScreenPlaceholder } from '../../screens/placeholders/WorkoutLobbyScreenPlaceholder';
 import { LiveModeScreenPlaceholder } from '../../screens/placeholders/LiveModeScreenPlaceholder';
 import { QuickLogScreenPlaceholder } from '../../screens/placeholders/QuickLogScreenPlaceholder';
@@ -32,6 +30,7 @@ import { SettingsScreenPlaceholder } from '../../screens/placeholders/SettingsSc
 // Real Feature Screens - 真實功能畫面
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
 import HistoryScreen from '../../features/workouts/screens/HistoryScreen';
+import { TemplatesScreen, TemplateEditorScreen } from '../../features/templates';
 
 // Create navigators - 創建導航器
 const Tab = createBottomTabNavigator(); // 底部標籤導航器
@@ -48,9 +47,10 @@ const WorkoutStack = () => {
   const { theme } = useTheme();
   
   return (
+    // @ts-ignore - React Navigation v7 type compatibility issue with React 19
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="TemplatesMain" component={TemplatesScreenPlaceholder} />
-      <Stack.Screen name="TemplateEditor" component={TemplateEditorScreenPlaceholder} />
+      <Stack.Screen name="TemplatesMain" component={TemplatesScreen} />
+      <Stack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
       <Stack.Screen name="WorkoutLobby" component={WorkoutLobbyScreenPlaceholder} />
       <Stack.Screen name="LiveWorkout" component={LiveModeScreenPlaceholder} />
       <Stack.Screen name="QuickLogWorkout" component={QuickLogScreenPlaceholder} />
@@ -74,6 +74,7 @@ const MainApp = () => {
   const { t } = useTranslation();
   
   return (
+    // @ts-ignore - React Navigation v7 type compatibility issue with React 19
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
@@ -150,6 +151,7 @@ const AuthNavigator = () => {
   const { theme } = useTheme();
   
   return (
+    // @ts-ignore - React Navigation v7 type compatibility issue with React 19
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login">
         {(props) => <LoginScreen {...props} theme={theme || {}} />}

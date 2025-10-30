@@ -13,8 +13,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  TouchableOpacity,
+  Text
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
 import { LoginForm } from '../components/LoginForm';
 import CustomAlert from '../../../shared/components/navigation/CustomAlert';
@@ -102,18 +105,72 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
           [
             { 
               text: '切換到登入', 
-              onPress: () => setIsSignUp(false),
+              onPress: () => {
+                hideCustomAlert();
+                setIsSignUp(false);
+              },
               style: 'default'
             },
             { 
               text: '取消', 
+              onPress: hideCustomAlert,
+              style: 'cancel'
+            }
+          ]
+        );
+      } else if (error.message.includes('登入失敗') || error.message.includes('帳號或密碼不正確')) {
+        // 提供使用本地模式的選項
+        showCustomAlert(
+          '登入失敗', 
+          error.message,
+          [
+            { 
+              text: '使用本地模式', 
+              onPress: () => {
+                hideCustomAlert();
+                handleLocalMode();
+              },
+              style: 'default'
+            },
+            {
+              text: '切換到註冊',
+              onPress: () => {
+                hideCustomAlert();
+                setIsSignUp(true);
+              },
+              style: 'default'
+            },
+            { 
+              text: '重試', 
+              onPress: hideCustomAlert,
+              style: 'cancel'
+            }
+          ]
+        );
+      } else if (error.message.includes('無法連接') || error.message.includes('服務器錯誤')) {
+        // 網絡或服務器錯誤，建議使用本地模式
+        showCustomAlert(
+          '連接失敗', 
+          error.message,
+          [
+            { 
+              text: '使用本地模式', 
+              onPress: () => {
+                hideCustomAlert();
+                handleLocalMode();
+              },
+              style: 'default'
+            },
+            { 
+              text: '重試', 
+              onPress: hideCustomAlert,
               style: 'cancel'
             }
           ]
         );
       } else {
         showCustomAlert('錯誤', error.message || '操作失敗', [
-          { text: '確定', onPress: () => {} }
+          { text: '確定', onPress: hideCustomAlert }
         ]);
       }
     }
@@ -123,9 +180,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
   const handleLocalMode = async () => {
     try {
       await signInLocal();
-      Alert.alert('本地模式', '您已進入本地模式，數據不會同步到雲端');
+      // 成功進入本地模式會自動導航到主應用程式
+      console.log('成功進入本地模式');
     } catch (error) {
-      Alert.alert('錯誤', '進入本地模式失敗');
+      showCustomAlert('錯誤', '進入本地模式失敗', [
+        { text: '確定', onPress: hideCustomAlert }
+      ]);
     }
   };
 
@@ -133,6 +193,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
   const handleToggleSignUp = () => {
     setIsSignUp(!isSignUp);
     clearError();
+  };
+
+  // DEV: Clear all storage (for testing)
+  const handleClearStorage = async () => {
+    try {
+      await AsyncStorage.clear();
+      Alert.alert('成功', '已清除所有本地數據，請重新啟動應用');
+      console.log('✅ AsyncStorage cleared successfully');
+    } catch (error) {
+      Alert.alert('錯誤', '清除數據失敗');
+      console.error('Failed to clear AsyncStorage:', error);
+    }
   };
 
   return (
@@ -158,6 +230,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
             onClearError={clearError}
             theme={theme}
           />
+          
+          {/* DEV: Clear Storage Button */}
+          <TouchableOpacity 
+            onPress={handleClearStorage}
+            style={styles.devButton}
+          >
+            <Text style={styles.devButtonText}>
+              🧹 清除所有數據 (測試用)
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       
@@ -187,6 +269,19 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignSelf: 'center',
     width: '100%',
+  },
+  devButton: {
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 8,
+    alignItems: 'center',
+    opacity: 0.8,
+  },
+  devButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

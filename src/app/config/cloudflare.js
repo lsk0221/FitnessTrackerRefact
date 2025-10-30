@@ -66,13 +66,21 @@ export class CloudflareAuth {
         if (response.status === 409) {
           throw new Error('該郵箱已被註冊，請使用登入功能或嘗試其他郵箱');
         } else if (response.status === 401) {
-          throw new Error('登入失敗，請檢查郵箱和密碼');
+          // 提供更詳細的錯誤信息
+          const errorMessage = data.error || data.message || '登入失敗';
+          if (errorMessage.includes('登入失敗')) {
+            throw new Error('登入失敗：帳號或密碼不正確。如果您是新用戶，請先註冊。或者您可以使用「本地模式」來離線使用應用。');
+          } else {
+            throw new Error(errorMessage);
+          }
         } else if (response.status === 400) {
           throw new Error('請求格式錯誤，請檢查輸入信息');
+        } else if (response.status === 404) {
+          throw new Error('API 端點不存在，請檢查 API 配置');
         } else if (response.status >= 500) {
-          throw new Error('服務器錯誤，請稍後再試');
+          throw new Error('服務器錯誤，請稍後再試或使用「本地模式」');
         } else {
-          throw new Error(data.message || `API request failed with status ${response.status}`);
+          throw new Error(data.error || data.message || `API request failed with status ${response.status}`);
         }
       }
 
@@ -81,6 +89,17 @@ export class CloudflareAuth {
       console.error('API request error:', error);
       console.error('Request URL:', url);
       console.error('Request config:', config);
+      
+      // 處理網絡錯誤
+      if (error.message === 'Network request failed' || error.message.includes('fetch')) {
+        throw new Error('無法連接到服務器，請檢查網絡連接或使用「本地模式」');
+      }
+      
+      // 處理 JSON 解析錯誤
+      if (error instanceof SyntaxError) {
+        throw new Error('服務器返回無效數據，API 可能未正確配置');
+      }
+      
       throw error;
     }
   }
@@ -204,6 +223,25 @@ export class CloudflareAuth {
   // 獲取訓練數據
   async getWorkoutData() {
     return await this.request(CLOUDFLARE_CONFIG.ENDPOINTS.GET_DATA);
+  }
+
+  // 檢查 API 連接狀態
+  async checkConnectivity() {
+    try {
+      console.log('檢查 API 連接狀態...');
+      const url = `${this.baseURL}/health`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      // 即使沒有 /health 端點，只要能連接到服務器就返回 true
+      console.log('API 連接檢查狀態:', response.status);
+      return response.status < 500; // 只要不是服務器錯誤就認為可連接
+    } catch (error) {
+      console.error('API 連接檢查失敗:', error);
+      return false;
+    }
   }
 
   // 本地存儲方法

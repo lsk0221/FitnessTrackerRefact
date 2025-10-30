@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import * as workoutService from '../services/workoutService';
 import type { Workout, WorkoutDataByDate } from '../types/workout.types';
+import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
 
 /**
  * 編輯表單狀態
@@ -65,11 +66,13 @@ export interface UseWorkoutHistoryReturn {
 
 /**
  * useWorkoutHistory Hook
- * @param userId - Optional user ID for multi-user support
  * @returns Hook return values
  */
-export const useWorkoutHistory = (userId?: string): UseWorkoutHistoryReturn => {
+export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
   const { t } = useTranslation();
+  // Get current user for data isolation
+  const { user } = useCloudflareAuth();
+  const userId = user?.id;
   
   // Data state
   const [workouts, setWorkouts] = useState<Workout[]>([]);

@@ -17,10 +17,10 @@ export interface TemplateExercise {
   movementPattern?: string;
   equipment?: string;
   tags?: string[];
-  // Optional suggested parameters
+  // Optional suggested parameters (numeric only)
   sets?: number;
-  reps?: string;
-  weight?: string;
+  reps?: number;
+  weight?: number;
   restTime?: number;
   instructions?: string;
 }
