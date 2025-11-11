@@ -160,10 +160,34 @@ export const getCurrentUserProfile = async (): Promise<User | null> => {
       return profile.user;
     }
     return null;
-  } catch (error) {
-    console.log('雲端用戶資料獲取失敗，使用本地資料:', error.message);
-    // 雲端獲取失敗，返回本地資料
-    return await getCurrentUser();
+  } catch (error: any) {
+    const errorMessage = error?.message || '';
+    const errorStatus = error?.status || error?.response?.status;
+    
+    // Check if error is due to invalid/expired token
+    const isTokenError = 
+      errorMessage.includes('Invalid or expired token') ||
+      errorMessage.includes('invalid token') ||
+      errorMessage.includes('expired token') ||
+      errorStatus === 401 ||
+      errorStatus === 403;
+    
+    if (isTokenError) {
+      console.log('檢測到過期或無效的 token，執行登出:', errorMessage);
+      // Token 無效，清除認證資料並登出
+      try {
+        await cloudflareAuth.removeToken();
+        await AsyncStorage.removeItem('user_profile');
+        console.log('已清除過期 token 和用戶資料');
+      } catch (removeError) {
+        console.error('清除 token 時發生錯誤:', removeError);
+      }
+      return null;
+    } else {
+      // 其他錯誤（如網路問題），返回本地資料作為降級方案
+      console.log('雲端用戶資料獲取失敗（非認證錯誤），使用本地資料:', errorMessage);
+      return await getCurrentUser();
+    }
   }
 };
 

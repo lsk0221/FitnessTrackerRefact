@@ -44,7 +44,8 @@ export const STORAGE_KEYS = {
   CUSTOM_EXERCISES: 'custom_exercises',
   THEME: 'theme_preference',
   SYNC_ENABLED: 'sync_enabled',
-  UNIT_PREFERENCE: 'unit_preference' // 新增：單位偏好設定
+  UNIT_PREFERENCE: 'unit_preference', // 新增：單位偏好設定
+  LAST_EXERCISE: 'last_exercise' // 最後訓練的動作
 };
 
 // 單位配置

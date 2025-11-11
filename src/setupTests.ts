@@ -6,8 +6,7 @@
  * 全域測試配置和模擬
  */
 
-// Temporarily disabled due to React Native parsing issues
-// import '@testing-library/jest-native/extend-expect';
+import '@testing-library/jest-native/extend-expect';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -33,6 +32,12 @@ jest.mock('@react-navigation/native', () => ({
   }),
   useFocusEffect: jest.fn(),
 }));
+
+// Mock reanimated
+jest.mock('react-native-reanimated', () => require('./test/mocks/react-native-reanimated'));
+
+// Mock react-native-svg elements
+jest.mock('react-native-svg', () => require('./test/mocks/react-native-svg'));
 
 // Mock Expo modules
 jest.mock('expo-status-bar', () => ({

@@ -399,9 +399,73 @@ According to the refactoring plan, the next feature to refactor is:
 
 ---
 
+## Bug Fixes and Enhancements
+
+### Bug Fixes Applied
+
+#### Bug #1: Exercise Selector Search Not Working ✅ Fixed
+- **Issue:** Search functionality in Exercise Selector was completely broken
+- **Root Cause:** Search query state was not properly passed from hook to component
+- **Fix:** Updated `useTemplateEditor` hook to properly manage search state and pass filtered exercises to `ExerciseSelector` component
+- **Files Modified:** `useTemplateEditor.ts`, `ExerciseSelector.tsx`
+
+#### Bug #2: Duplicate Exercise Prevention ✅ Fixed
+- **Issue:** Users could add the same exercise multiple times to a template
+- **Root Cause:** No duplicate checking logic in exercise addition
+- **Fix:** Added duplicate detection in `useTemplateEditor` hook before adding exercises
+- **Files Modified:** `useTemplateEditor.ts`
+
+#### Bug #3: Back Button Change Detection ✅ Fixed
+- **Issue:** Back button showed "unsaved changes" warning even when no changes were made
+- **Root Cause:** Change detection logic was too sensitive
+- **Fix:** Improved change detection to only trigger on actual data modifications
+- **Files Modified:** `useTemplateEditor.ts`, `TemplateEditorScreen.tsx`
+
+### Feature Enhancements
+
+#### Enhancement #1: Multi-Select Exercises ✅ Implemented
+- **Feature:** Users can select multiple exercises at once from the Exercise Selector
+- **Benefits:** Significantly improves efficiency when creating templates with multiple exercises
+- **Implementation:** Added multi-select mode with visual feedback (checkmarks, highlighted backgrounds)
+- **Files Modified:** `ExerciseSelector.tsx`, `useTemplateEditor.ts`
+
+#### Enhancement #2: Custom Exercise Creation ✅ Implemented
+- **Feature:** Users can create their own exercises with muscle group and equipment tags
+- **Benefits:** Extends exercise library beyond preset exercises
+- **Implementation:** 
+  - Custom exercise modal with form inputs
+  - User-specific storage for custom exercises
+  - Integration with exercise selector
+  - Visual "CUSTOM" badge for identification
+- **Files Modified:** `ExerciseSelector.tsx`, `exerciseLibraryService.ts`, `useTemplateEditor.ts`
+
+#### Enhancement #3: Exercise Parameter Editing ✅ Implemented
+- **Feature:** Users can edit sets, reps, and weight for exercises within templates
+- **Benefits:** More flexible template customization
+- **Implementation:** Inline editing with numeric-only inputs
+- **Files Modified:** `TemplateEditorForm.tsx`, `useTemplateEditor.ts`
+
+#### Enhancement #4: Decimal Weight Support ✅ Implemented
+- **Feature:** Support for decimal weight values (e.g., 2.5 kg)
+- **Benefits:** More precise weight tracking
+- **Implementation:** Updated input validation and formatting
+- **Files Modified:** `TemplateEditorForm.tsx`, validation logic
+
+### Data Isolation Fixes
+
+#### User-Specific Storage ✅ Implemented
+- **Issue:** Templates were shared across all users
+- **Fix:** Implemented user-specific storage keys using `userId` from authentication context
+- **Impact:** Complete data isolation between users
+- **Files Modified:** `templateService.ts`, `useTemplates.ts`, `useTemplateEditor.ts`
+
+---
+
 **Refactored by:** AI Assistant  
 **Date:** October 28, 2025  
 **Status:** ✅ Complete  
 **Lines of Code:** ~3,186  
 **Files Created:** 13  
+**Bug Fixes:** 3  
+**Enhancements:** 4  
 

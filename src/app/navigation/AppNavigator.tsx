@@ -20,7 +20,6 @@ import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext';
 
 // Screen imports (temporary placeholders - will be replaced with actual features)
 // 畫面導入（臨時佔位符 - 將被實際功能取代）
-import { ProgressChartScreenPlaceholder } from '../../screens/placeholders/ProgressChartScreenPlaceholder';
 import { WorkoutLobbyScreenPlaceholder } from '../../screens/placeholders/WorkoutLobbyScreenPlaceholder';
 import { LiveModeScreenPlaceholder } from '../../screens/placeholders/LiveModeScreenPlaceholder';
 import { QuickLogScreenPlaceholder } from '../../screens/placeholders/QuickLogScreenPlaceholder';
@@ -31,6 +30,7 @@ import { SettingsScreenPlaceholder } from '../../screens/placeholders/SettingsSc
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
 import HistoryScreen from '../../features/workouts/screens/HistoryScreen';
 import { TemplatesScreen, TemplateEditorScreen } from '../../features/templates';
+import ProgressChartScreen from '../../features/progress/screens/ProgressChartScreen';
 
 // Create navigators - 創建導航器
 const Tab = createBottomTabNavigator(); // 底部標籤導航器
@@ -98,7 +98,7 @@ const MainApp = () => {
       />
       <Tab.Screen 
         name="ProgressChart" 
-        component={ProgressChartScreenPlaceholder}
+        component={ProgressChartScreen}
         options={{
           title: t('navigation.progress'),
           tabBarIcon: ({ color }) => (
