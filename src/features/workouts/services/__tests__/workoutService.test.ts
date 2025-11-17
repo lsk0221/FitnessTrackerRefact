@@ -15,16 +15,14 @@ import type { Workout, WorkoutInput } from '../../types/workout.types';
 jest.mock('@react-native-async-storage/async-storage');
 
 // Mock migration utilities
+const mockFixMuscleGroupInconsistency = jest.fn((workouts) => workouts);
+const mockNeedsMuscleGroupFix = jest.fn().mockReturnValue(false);
+
 jest.mock('../../../../shared/services/data/dataMigration', () => ({
   performDataMigration: jest.fn().mockResolvedValue(true),
   needsMigration: jest.fn().mockReturnValue(false),
-  fixMuscleGroupInconsistency: jest.fn((workouts) => workouts),
-  needsMuscleGroupFix: jest.fn().mockReturnValue(false),
-}));
-
-jest.mock('../../../../shared/utils/data/exerciseDataMigration', () => ({
-  migrateExerciseData: jest.fn((workouts) => workouts),
-  needsExerciseMigration: jest.fn().mockReturnValue(false),
+  fixMuscleGroupInconsistency: (workouts) => mockFixMuscleGroupInconsistency(workouts),
+  needsMuscleGroupFix: () => mockNeedsMuscleGroupFix(),
 }));
 
 // Sample test data
@@ -59,6 +57,8 @@ describe('WorkoutService', () => {
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
     (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
     (AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
+    mockNeedsMuscleGroupFix.mockReturnValue(false);
+    mockFixMuscleGroupInconsistency.mockImplementation((workouts) => workouts);
   });
 
   describe('loadWorkouts', () => {
@@ -109,6 +109,73 @@ describe('WorkoutService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
+    });
+
+    it('should perform muscle group migration when Chinese data is detected', async () => {
+      // Arrange - Create "dirty" data with Chinese muscle groups
+      const dirtyWorkouts: Workout[] = [
+        {
+          id: 'test-1',
+          date: '2024-10-20T10:00:00.000Z',
+          muscleGroup: '腿部', // Chinese
+          exercise: 'Squat',
+          sets: 3,
+          reps: 10,
+          weight: 100,
+          createdAt: '2024-10-20T10:00:00.000Z',
+          updatedAt: '2024-10-20T10:00:00.000Z',
+        },
+        {
+          id: 'test-2',
+          date: '2024-10-21T10:00:00.000Z',
+          muscleGroup: '胸部', // Chinese
+          exercise: 'Bench Press',
+          sets: 3,
+          reps: 10,
+          weight: 80,
+          createdAt: '2024-10-21T10:00:00.000Z',
+          updatedAt: '2024-10-21T10:00:00.000Z',
+        },
+      ];
+
+      const cleanedWorkouts: Workout[] = [
+        {
+          ...dirtyWorkouts[0],
+          muscleGroup: 'Legs', // English
+        },
+        {
+          ...dirtyWorkouts[1],
+          muscleGroup: 'Chest', // English
+        },
+      ];
+
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify(dirtyWorkouts)
+      );
+      mockNeedsMuscleGroupFix.mockReturnValue(true);
+      mockFixMuscleGroupInconsistency.mockReturnValue(cleanedWorkouts);
+
+      // Act
+      const result = await workoutService.loadWorkouts();
+
+      // Assert
+      expect(result.success).toBe(true);
+      // needsMuscleGroupFix is called with the parsed workouts array
+      expect(mockNeedsMuscleGroupFix).toHaveBeenCalled();
+      // fixMuscleGroupInconsistency is called with the dirty workouts
+      expect(mockFixMuscleGroupInconsistency).toHaveBeenCalled();
+      
+      // Verify cleaned data is returned
+      expect(result.data).toEqual(cleanedWorkouts);
+      expect(result.data?.[0].muscleGroup).toBe('Legs');
+      expect(result.data?.[1].muscleGroup).toBe('Chest');
+      
+      // Verify cleaned data is re-saved to storage
+      expect(AsyncStorage.setItem).toHaveBeenCalled();
+      const savedData = (AsyncStorage.setItem as jest.Mock).mock.calls[0][1];
+      const parsedSavedData = JSON.parse(savedData);
+      expect(parsedSavedData[0].muscleGroup).toBe('Legs');
+      expect(parsedSavedData[1].muscleGroup).toBe('Chest');
     });
   });
 
@@ -416,20 +483,20 @@ describe('WorkoutService', () => {
       expect(result.data?.[2].date).toBe('2024-10-22T10:00:00.000Z');
     });
 
-    it('should filter out invalid workouts', async () => {
+    it('should include all workouts regardless of weight (including bodyweight exercises)', async () => {
       const validWorkout = mockWorkout;
-      const invalidWorkout1 = { ...mockWorkout, id: 'invalid-1', weight: -10 };
-      const invalidWorkout2 = { ...mockWorkout, id: 'invalid-2', weight: 0 };
+      const bodyweightWorkout = { ...mockWorkout, id: 'invalid-1', weight: 0 }; // Bodyweight exercise
+      const negativeWeightWorkout = { ...mockWorkout, id: 'invalid-2', weight: -10 }; // Invalid but still included
 
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
-        JSON.stringify([validWorkout, invalidWorkout1, invalidWorkout2])
+        JSON.stringify([validWorkout, bodyweightWorkout, negativeWeightWorkout])
       );
 
       const result = await workoutService.getWorkoutsByExercise('Bench Press');
 
       expect(result.success).toBe(true);
-      expect(result.data?.length).toBe(1);
-      expect(result.data?.[0].id).toBe(validWorkout.id);
+      // All workouts should be included (filtering by weight is done in progressService, not here)
+      expect(result.data?.length).toBe(3);
     });
   });
 

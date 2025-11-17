@@ -216,7 +216,7 @@ src/
 | ✅ **Authentication** | `src/contexts/CloudflareAuthContext.js`<br>`src/contexts/AuthContext.js`<br>`src/screens/LoginScreen.js`<br>`src/config/cloudflare.js` | `src/features/auth/` | ✅ **COMPLETED** - Extract login/register forms into components, create `useAuth` hook for logic, move API calls to `shared/services/authService.ts`, consolidate auth contexts. Fixed useCallback closure issues and dual authentication engine problem. |
 | ✅ **Workouts** | `src/hooks/useWorkouts.js`<br>`src/screens/HistoryScreen.js`<br>`src/components/WorkoutInputForm.js`<br>`src/utils/storage.js` | `src/features/workouts/` | ✅ **COMPLETED** - Extracted workout CRUD operations into `workoutService.ts`, created `useWorkoutHistory` hook, separated calendar/list/modal components, implemented clean HistoryScreen container. All workout history features migrated successfully. |
 | ✅ **Templates** | `src/screens/TemplatesScreen.js`<br>`src/screens/TemplateEditorScreen.js`<br>`src/components/TemplateEditor.js`<br>`src/components/TemplateManagement.js`<br>`src/data/hardcodedData.js` | `src/features/templates/` | ✅ **COMPLETED** - Extracted template CRUD operations into `templateService.ts`, created `useTemplates` and `useTemplateEditor` hooks, moved exercise library to `exerciseLibraryService.ts`, implemented multi-select exercises, custom exercise creation, exercise parameter editing, and complete data isolation. |
-| **Live Workout** | `src/screens/LiveModeScreen.js`<br>`src/components/LiveWorkout.js`<br>`src/components/SmartSwapModal.js` | `src/features/live-workout/` | Extract timer logic into `useWorkoutTimer` hook, create `SetTracker` component, move smart swap logic to `liveWorkoutService.ts`, separate UI from business logic |
+| ✅ **Live Workout** | `src/screens/LiveModeScreen.js`<br>`src/components/LiveWorkout.js`<br>`src/components/SmartSwapModal.js` | `src/features/live-workout/` | ✅ **COMPLETED** - Extracted timer logic into `useWorkoutTimer` hook, created `SetTracker`, `RestTimer`, `WorkoutProgress`, and `SmartSwapModal` components, moved smart swap and finish workout logic to `liveWorkoutService.ts`, created `useLiveWorkout` hook for state management, separated UI from business logic. All screens refactored and integrated into navigation. |
 | **Quick Log** | `src/screens/QuickLogScreen.js`<br>`src/components/QuickLogWorkout.js` | `src/features/quick-log/` | Extract batch logging logic into `quickLogService.ts`, create `useQuickLog` hook, separate form components from screen logic |
 | ✅ **Progress Tracking** | `src/components/ProgressChartScreen.js`<br>`src/components/CustomLineChart.js`<br>`src/hooks/useTargetWeights.js` | `src/features/progress/` | ✅ **COMPLETED** - Extracted chart rendering into `ProgressChart` component, created `useProgress` hook, moved stats calculations to `progressService.ts`, separated chart rendering from data processing. Built complete progress tracking with weight/volume modes, time range filtering, target weight setting, and interactive charts. Status: ✅ Service & Hook Tests Passing. |
 | **Profile** | `src/screens/ProfileScreen.js`<br>`src/screens/SettingsScreen.js`<br>`src/hooks/useUnit.js` | `src/features/profile/` | Extract profile management logic into `profileService.ts`, create `useProfile` hook, move settings logic to separate components, consolidate unit management |
@@ -261,7 +261,7 @@ src/
 4. ✅ **Progress** - Data visualization (COMPLETED)
 
 ### **Phase 3: Advanced Features**
-1. **Live Workout** - Real-time tracking
+1. ✅ **Live Workout** - Real-time tracking (COMPLETED)
 2. **Quick Log** - Batch operations
 3. **Profile** - User management
 
@@ -369,11 +369,13 @@ This plan provides a clear roadmap for transforming the current "vibe coding" st
   - `docs/TEMPLATES_MANUAL_TEST_PLAN.md` - Testing checklist
 
 #### **Progress Feature - COMPLETED ✅**
-- **Status**: Successfully refactored and integrated
+- **Status**: Successfully refactored, integrated, and fully tested
 - **Files Created**:
   - `src/features/progress/types/progress.types.ts` - Type definitions for progress tracking
   - `src/features/progress/services/progressService.ts` - Business logic for data processing and calculations
+  - `src/features/progress/services/progressService.test.ts` - Service tests
   - `src/features/progress/hooks/useProgress.ts` - State management hook
+  - `src/features/progress/hooks/useProgress.test.tsx` - Hook tests (main/sub muscle group mapping)
   - `src/features/progress/components/ProgressChart.tsx` - SVG-based line chart component
   - `src/features/progress/components/StatsCard.tsx` - Statistics display component
   - `src/features/progress/components/ExerciseSelector.tsx` - Exercise selection with modals
@@ -383,21 +385,60 @@ This plan provides a clear roadmap for transforming the current "vibe coding" st
   - ✅ Weight and volume tracking modes
   - ✅ Time range filtering (7d, 1m, 3m, 6m, YTD, last year, all)
   - ✅ Target weight/volume setting per exercise
-  - ✅ Exercise progress visualization by muscle group
+  - ✅ Exercise progress visualization by muscle group (with main/sub-group mapping)
   - ✅ Statistics display (total sessions, max weight, improvement rate)
   - ✅ Multi-user support
   - ✅ Custom exercise support
   - ✅ Unit conversion handling (kg/lb)
   - ✅ Pull-to-refresh functionality
   - ✅ Improvement percentage calculation
+  - ✅ Bodyweight exercise support (weight: 0)
+- **Testing**:
+  - ✅ Service & Hook Tests Passing
+  - ✅ Validates main/sub muscle group mapping logic
+  - ✅ Validates performed exercises list loading
 
 ### **🔄 Next Steps**
 
+#### **Live Workout Feature - COMPLETED ✅**
+- **Status**: Successfully refactored, integrated, and fully tested
+- **Files Created**:
+  - `src/features/live-workout/types/liveWorkout.types.ts` - Type definitions for live workout state, sets, timer, etc.
+  - `src/features/live-workout/services/liveWorkoutService.ts` - Business logic for finishing workouts and smart swap suggestions
+  - `src/features/live-workout/services/liveWorkoutService.test.ts` - Service tests (aggregation, smart swap)
+  - `src/features/live-workout/hooks/useWorkoutTimer.ts` - Rest timer management hook
+  - `src/features/live-workout/hooks/useWorkoutTimer.test.ts` - Timer hook tests
+  - `src/features/live-workout/hooks/useLiveWorkout.ts` - Main workout state management hook
+  - `src/features/live-workout/hooks/useLiveWorkout.test.ts` - Main hook tests (Logbook Pattern, Golden Rules, state corruption fixes)
+  - `src/features/live-workout/components/SetTracker.tsx` - Set tracking UI component
+  - `src/features/live-workout/components/RestTimer.tsx` - Rest timer display component
+  - `src/features/live-workout/components/WorkoutProgress.tsx` - Progress display component
+  - `src/features/live-workout/components/SmartSwapModal.tsx` - Exercise replacement modal
+  - `src/features/live-workout/screens/WorkoutLobbyScreen.tsx` - Workout preparation screen
+  - `src/features/live-workout/screens/LiveModeScreen.tsx` - Active workout session screen
+- **Functionality**:
+  - ✅ Real-time workout tracking with set-by-set progression
+  - ✅ Rest timer with countdown and skip functionality
+  - ✅ Smart exercise replacement with suggestions based on muscle group, movement pattern, and equipment
+  - ✅ Automatic loading of last performance for exercises
+  - ✅ Workout completion with data aggregation (sets aggregated per exercise)
+  - ✅ Exercise navigation (next/previous/skip)
+  - ✅ Progress tracking and visualization
+  - ✅ Multi-user support
+  - ✅ Unit conversion handling
+- **Testing**:
+  - ✅ Service & Hook Tests Passing (97 tests total)
+  - ✅ Validates "Logbook Pattern" (completedLog state management)
+  - ✅ Validates "Golden Rules" (timer callback logic)
+  - ✅ Validates state corruption bug fixes (navigation doesn't clear log)
+  - ✅ Validates data aggregation (sets, reps, weight averaging)
+
 #### **Workouts Feature - COMPLETED ✅**
-- **Status**: Successfully refactored and integrated
+- **Status**: Successfully refactored, integrated, and fully tested
 - **Files Created**:
   - `src/features/workouts/types/workout.types.ts` - Type definitions
   - `src/features/workouts/services/workoutService.ts` - Business logic and CRUD operations
+  - `src/features/workouts/services/__tests__/workoutService.test.ts` - Service tests (including data migration)
   - `src/features/workouts/hooks/useWorkoutHistory.ts` - State management hook
   - `src/features/workouts/components/WorkoutCalendar.tsx` - Calendar component
   - `src/features/workouts/components/WorkoutList.tsx` - Workout list component
@@ -410,16 +451,23 @@ This plan provides a clear roadmap for transforming the current "vibe coding" st
   - ✅ Multi-user support
   - ✅ Unit conversion handling
   - ✅ Data validation and error handling
+  - ✅ Chinese to English muscle group migration
+  - ✅ Main/sub muscle group mapping for consistent display
+- **Testing**:
+  - ✅ Service Tests Passing
+  - ✅ Validates data migration (Chinese → English muscle groups)
+  - ✅ Validates bodyweight exercise support (weight: 0)
 
 ### **📊 Progress Statistics**
 - **Total Features**: 8
-- **Completed**: 4 (Authentication, Workouts, Templates, Progress)
+- **Completed**: 5 (Authentication, Workouts, Templates, Progress, Live Workout)
 - **In Progress**: 0
-- **Remaining**: 4
-- **Completion Rate**: 50%
+- **Remaining**: 3
+- **Completion Rate**: 62.5%
+- **Test Coverage**: 97 tests passing across Workouts, Live Workout, and Progress features
 
 ---
 *Refactoring Plan created on: October 2024*
 *Total features identified: 12*
 *Migration phases: 4*
-*Last updated: Progress feature completed - Phase 2 Core Features 100% complete (4/4 features done)*
+*Last updated: Live Workout feature completed - Phase 3 Advanced Features started (1/3 features done)*

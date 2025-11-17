@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
+import { getMuscleGroupColor } from '../../utils/helpers';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -107,7 +108,7 @@ const Calendar = ({ theme, workoutData = {}, onDatePress, selectedDate = null, o
                 key={index}
                 style={[
                   styles.muscleGroupDot,
-                  { backgroundColor: getMuscleGroupColor(muscleGroup) }
+                  { backgroundColor: getMuscleGroupColor(muscleGroup, theme) }
                 ]}
               />
             ))}
@@ -122,23 +123,6 @@ const Calendar = ({ theme, workoutData = {}, onDatePress, selectedDate = null, o
     );
   };
 
-  // 獲取肌肉群顏色
-  const getMuscleGroupColor = (muscleGroup) => {
-    // 核心使用主題適配的顏色
-    if (muscleGroup.toLowerCase() === 'core') {
-      return theme.textPrimary; // 淺色模式：黑色，深色模式：白色
-    }
-    
-    const colors = {
-      'chest': '#00BCD4',      // 藍綠色 (與手臂紅色形成強烈對比)
-      'shoulders': '#2196F3',  // 藍色
-      'back': '#FF9800',       // 橙色
-      'legs': '#9C27B0',       // 紫色
-      'arms': '#F44336',       // 紅色
-      'cardio': '#795548',     // 棕色
-    };
-    return colors[muscleGroup.toLowerCase()] || '#00BCD4'; // 改為藍綠色作為默認值
-  };
 
   // 渲染月曆
   const renderCalendar = () => {

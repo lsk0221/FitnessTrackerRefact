@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { WorkoutTemplate, TemplateExercise, EditorMode } from '../types/template.types';
 import { createTemplate, updateTemplate, getTemplateById } from '../services/templateService';
 import {
@@ -15,6 +16,7 @@ import {
   searchExercises as searchExercisesService,
   getExercisesByMuscleGroup,
   saveCustomExercise,
+  getMuscleGroups,
   Exercise,
 } from '../../../shared/services/data/exerciseLibraryService';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
@@ -39,6 +41,7 @@ interface UseTemplateEditorReturn {
   showExerciseSelector: boolean;
   exerciseSearchQuery: string;
   selectedMuscleGroup: string | null;
+  muscleGroupsList: string[]; // Dynamic muscle groups list
 
   // UI state
   loading: boolean;
@@ -89,6 +92,7 @@ export const useTemplateEditor = ({
   // Get current user for data isolation
   const { user } = useCloudflareAuth();
   const userId = user?.id;
+  const { t } = useTranslation();
 
   // Template state
   const [templateName, setTemplateName] = useState<string>('');
@@ -113,11 +117,20 @@ export const useTemplateEditor = ({
   const [showExerciseSelector, setShowExerciseSelector] = useState<boolean>(false);
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState<string>('');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  const [muscleGroupsList, setMuscleGroupsList] = useState<string[]>([]);
 
   // UI state
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Load muscle groups on mount
+   * 載入肌肉群列表
+   */
+  useEffect(() => {
+    loadMuscleGroups();
+  }, [loadMuscleGroups]);
 
   /**
    * Initialize template data based on mode
@@ -150,19 +163,43 @@ export const useTemplateEditor = ({
         }
 
         if (template) {
-          const templateName = mode === 'copy' ? `${template.name} (Copy)` : template.name;
-          const templateDescription = template.description;
+          // For preset templates, preserve translation keys; for user templates, use the stored name
+          // 對於預設範本，保留翻譯鍵；對於用戶範本，使用存儲的名稱
+          let templateName: string;
+          let templateDescription: string;
+          
+          if (mode === 'copy' && template.nameKey) {
+            // Preset template being copied - use translated name with (Copy) suffix
+            // 正在複製的預設範本 - 使用翻譯後的名稱並添加 (Copy) 後綴
+            const translatedName = t(template.nameKey);
+            templateName = `${translatedName} (Copy)`;
+            templateDescription = template.descriptionKey ? t(template.descriptionKey) : (template.description || '');
+          } else if (mode === 'copy') {
+            // User template being copied - use stored name with (Copy) suffix
+            // 正在複製的用戶範本 - 使用存儲的名稱並添加 (Copy) 後綴
+            templateName = `${template.name || ''} (Copy)`;
+            templateDescription = template.description || '';
+          } else {
+            // Edit mode - use stored values
+            // 編輯模式 - 使用存儲的值
+            templateName = template.name || '';
+            templateDescription = template.description || '';
+          }
           
           // Parse exercises from JSON string if needed
           const parsedExercises = typeof template.exercises === 'string'
             ? JSON.parse(template.exercises)
             : template.exercises;
           
-          // Ensure exercises have valid IDs
+          // Ensure exercises have valid IDs and preserve translation keys
+          // 確保動作有有效的 ID 並保留翻譯鍵
           const validExercises = (parsedExercises || []).map((exercise: any, index: number) => ({
             id: exercise.id || `exercise-${Date.now()}-${index}`,
-            exercise: exercise.exercise || exercise.name || 'Unknown Exercise',
-            muscleGroup: exercise.muscleGroup || exercise.muscle_group || 'Unknown',
+            nameKey: exercise.nameKey || (exercise.exercise?.startsWith('exercises.') ? exercise.exercise : undefined),
+            muscleGroupKey: exercise.muscleGroupKey || (exercise.muscleGroup?.startsWith('muscleGroups.') ? exercise.muscleGroup : undefined),
+            // Legacy fields for backward compatibility
+            exercise: exercise.nameKey?.replace('exercises.', '') || exercise.exercise || exercise.name || 'Unknown Exercise',
+            muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscleGroup || exercise.muscle_group || 'Unknown',
             movementPattern: exercise.movementPattern || exercise.movement_pattern || 'Unknown',
             equipment: exercise.equipment || 'Unknown',
             tags: exercise.tags || [],
@@ -225,6 +262,23 @@ export const useTemplateEditor = ({
       Alert.alert('Error', 'Failed to load exercises');
     }
   }, [userId]);
+
+  /**
+   * Load dynamic muscle groups list
+   * 載入動態肌肉群列表
+   */
+  const loadMuscleGroups = useCallback(async () => {
+    try {
+      const result = await getMuscleGroups();
+      if (result.success && result.data) {
+        setMuscleGroupsList(result.data);
+      } else {
+        console.error('載入肌肉群列表失敗:', result.error);
+      }
+    } catch (error) {
+      console.error('載入肌肉群列表失敗:', error);
+    }
+  }, []);
 
   /**
    * Search exercises by query
@@ -319,15 +373,17 @@ export const useTemplateEditor = ({
    * 將練習添加到範本
    */
   const addExercise = useCallback((exercise: Exercise) => {
-    // Check if exercise already exists in the template
+    // Check if exercise already exists in the template (by nameKey or name)
     const isDuplicate = exercises.some(
-      (existingExercise) => existingExercise.exercise === exercise.name
+      (existingExercise) => 
+        (existingExercise.nameKey && exercise.nameKey && existingExercise.nameKey === exercise.nameKey) ||
+        (!existingExercise.nameKey && !exercise.nameKey && existingExercise.exercise === exercise.name)
     );
 
     if (isDuplicate) {
       Alert.alert(
         'Exercise Already Added',
-        `"${exercise.name}" is already in this template. Each exercise can only be added once.`,
+        `"${exercise.name || exercise.nameKey}" is already in this template. Each exercise can only be added once.`,
         [{ text: 'OK', style: 'default' }]
       );
       return;
@@ -335,10 +391,13 @@ export const useTemplateEditor = ({
 
     const newExercise: TemplateExercise = {
       id: `exercise-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      exercise: exercise.name,
-      muscleGroup: exercise.muscle_group,
-      movementPattern: exercise.movement_pattern,
-      equipment: exercise.equipment,
+      nameKey: exercise.nameKey,
+      muscleGroupKey: exercise.muscleGroupKey,
+      // Legacy fields for backward compatibility
+      exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || 'Unknown Exercise',
+      muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || 'Unknown',
+      movementPattern: exercise.movement_pattern || 'Unknown',
+      equipment: exercise.equipment || 'Unknown',
       tags: exercise.tags || [],
     };
 
@@ -351,8 +410,8 @@ export const useTemplateEditor = ({
    * 一次將多個練習添加到範本
    */
   const addMultipleExercises = useCallback((exercisesToAdd: Exercise[]) => {
-    const currentExerciseNames = new Set(
-      exercises.map((ex) => ex.exercise)
+    const currentExerciseKeys = new Set(
+      exercises.map((ex) => ex.nameKey || ex.exercise)
     );
 
     const newExercises: TemplateExercise[] = [];
@@ -360,24 +419,28 @@ export const useTemplateEditor = ({
     const timestamp = Date.now();
 
     exercisesToAdd.forEach((exercise, index) => {
-      // Check for duplicates
-      if (currentExerciseNames.has(exercise.name)) {
-        duplicates.push(exercise.name);
+      // Check for duplicates (by nameKey or name)
+      const exerciseKey = exercise.nameKey || exercise.name;
+      if (currentExerciseKeys.has(exerciseKey)) {
+        duplicates.push(exercise.name || exercise.nameKey || 'Unknown');
         return;
       }
 
-      // Create new exercise entry
+      // Create new exercise entry with translation keys
       const newExercise: TemplateExercise = {
         id: `exercise-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-        exercise: exercise.name,
-        muscleGroup: exercise.muscle_group,
-        movementPattern: exercise.movement_pattern,
-        equipment: exercise.equipment,
+        nameKey: exercise.nameKey,
+        muscleGroupKey: exercise.muscleGroupKey,
+        // Legacy fields for backward compatibility
+        exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || 'Unknown Exercise',
+        muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || 'Unknown',
+        movementPattern: exercise.movement_pattern || 'Unknown',
+        equipment: exercise.equipment || 'Unknown',
         tags: exercise.tags || [],
       };
 
       newExercises.push(newExercise);
-      currentExerciseNames.add(exercise.name);
+      currentExerciseKeys.add(exerciseKey);
     });
 
     // Add all new exercises
@@ -617,6 +680,7 @@ export const useTemplateEditor = ({
     showExerciseSelector,
     exerciseSearchQuery,
     selectedMuscleGroup,
+    muscleGroupsList, // Dynamic muscle groups list
 
     // UI state
     loading,

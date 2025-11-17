@@ -129,6 +129,60 @@ export const generateUniqueId = () => {
 };
 
 /**
+ * Convert exercise name to translation key
+ * 將動作名稱轉換為翻譯鍵
+ * @param {string} exerciseName - Raw English exercise name (e.g., "Barbell Bench Press")
+ * @returns {string} Translation key (e.g., "exercises.barbell_bench_press")
+ */
+export const getExerciseTranslationKey = (exerciseName) => {
+  if (!exerciseName) return '';
+  // If already a translation key, return as is
+  if (exerciseName.startsWith('exercises.')) {
+    return exerciseName;
+  }
+  // Convert to snake_case
+  const snakeCase = exerciseName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `exercises.${snakeCase}`;
+};
+
+/**
+ * Get color for a main muscle group
+ * 獲取主肌肉群的顏色
+ * 
+ * @param {string} mainMuscleGroup - Main muscle group name (e.g., "Chest", "Arms", "Legs")
+ * @param {any} theme - Theme object with textPrimary color
+ * @returns {string} Color hex code
+ */
+export const getMuscleGroupColor = (mainMuscleGroup, theme) => {
+  if (!mainMuscleGroup) {
+    return '#00BCD4'; // Default cyan
+  }
+
+  // Core uses theme-adapted color
+  if (mainMuscleGroup.toLowerCase() === 'core') {
+    return theme?.textPrimary || '#000000';
+  }
+
+  // Complete color map for all MAIN muscle groups
+  const colors = {
+    'chest': '#00BCD4',        // Cyan
+    'shoulders': '#2196F3',    // Blue
+    'back': '#FF9800',         // Orange
+    'legs': '#9C27B0',         // Purple
+    'arms': '#F44336',         // Red
+    'cardio': '#795548',       // Brown
+    'full body': '#4CAF50',    // Green
+    'fullbody': '#4CAF50',     // Alternative format
+  };
+
+  const lowerGroup = mainMuscleGroup.toLowerCase();
+  return colors[lowerGroup] || '#00BCD4'; // Default cyan
+};
+
+/**
  * 驗證輸入數據
  * Validate input data
  * @param {Object} data - 輸入數據
@@ -137,11 +191,15 @@ export const generateUniqueId = () => {
 export const validateInput = (data) => {
   const errors = [];
   
-  if (!data.muscleGroup || data.muscleGroup.trim() === '') {
+  // Check for muscle group (raw English string)
+  // 檢查肌肉群（原始英文字符串）
+  if (!data.muscleGroup || (typeof data.muscleGroup === 'string' && data.muscleGroup.trim() === '')) {
     errors.push('肌肉群不能為空');
   }
   
-  if (!data.exercise || data.exercise.trim() === '') {
+  // Check for exercise (raw English string)
+  // 檢查訓練動作（原始英文字符串）
+  if (!data.exercise || (typeof data.exercise === 'string' && data.exercise.trim() === '')) {
     errors.push('訓練動作不能為空');
   }
   

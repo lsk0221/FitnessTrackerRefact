@@ -50,6 +50,7 @@ const TemplateEditorScreen: React.FC = () => {
     availableExercises,
     showExerciseSelector,
     exerciseSearchQuery,
+    muscleGroupsList,
 
     // UI state
     loading,
@@ -206,6 +207,7 @@ const TemplateEditorScreen: React.FC = () => {
           searchQuery={exerciseSearchQuery}
           onSearchChange={searchExercises}
           onLoadExercises={loadAvailableExercises}
+          muscleGroupsList={muscleGroupsList}
           theme={theme}
         />
     </View>

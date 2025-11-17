@@ -20,17 +20,19 @@ import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext';
 
 // Screen imports (temporary placeholders - will be replaced with actual features)
 // 畫面導入（臨時佔位符 - 將被實際功能取代）
-import { WorkoutLobbyScreenPlaceholder } from '../../screens/placeholders/WorkoutLobbyScreenPlaceholder';
-import { LiveModeScreenPlaceholder } from '../../screens/placeholders/LiveModeScreenPlaceholder';
 import { QuickLogScreenPlaceholder } from '../../screens/placeholders/QuickLogScreenPlaceholder';
 import { ProfileScreenPlaceholder } from '../../screens/placeholders/ProfileScreenPlaceholder';
-import { SettingsScreenPlaceholder } from '../../screens/placeholders/SettingsScreenPlaceholder';
+
+// Real Feature Screens - 真實功能畫面
+import { SettingsScreen } from '../../features/profile/screens/SettingsScreen';
 
 // Real Feature Screens - 真實功能畫面
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
 import HistoryScreen from '../../features/workouts/screens/HistoryScreen';
 import { TemplatesScreen, TemplateEditorScreen } from '../../features/templates';
 import ProgressChartScreen from '../../features/progress/screens/ProgressChartScreen';
+import WorkoutLobbyScreen from '../../features/live-workout/screens/WorkoutLobbyScreen';
+import LiveModeScreen from '../../features/live-workout/screens/LiveModeScreen';
 
 // Create navigators - 創建導航器
 const Tab = createBottomTabNavigator(); // 底部標籤導航器
@@ -51,8 +53,8 @@ const WorkoutStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TemplatesMain" component={TemplatesScreen} />
       <Stack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
-      <Stack.Screen name="WorkoutLobby" component={WorkoutLobbyScreenPlaceholder} />
-      <Stack.Screen name="LiveWorkout" component={LiveModeScreenPlaceholder} />
+      <Stack.Screen name="WorkoutLobby" component={WorkoutLobbyScreen} />
+      <Stack.Screen name="LiveWorkout" component={LiveModeScreen} />
       <Stack.Screen name="QuickLogWorkout" component={QuickLogScreenPlaceholder} />
     </Stack.Navigator>
   );
@@ -128,7 +130,7 @@ const MainApp = () => {
       />
       <Tab.Screen 
         name="Settings" 
-        component={SettingsScreenPlaceholder}
+        component={SettingsScreen}
         options={{
           title: t('navigation.settings'),
           tabBarIcon: ({ color }) => (

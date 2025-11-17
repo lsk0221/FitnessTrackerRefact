@@ -8,6 +8,7 @@ import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import * as workoutService from '../services/workoutService';
+import { getMuscleGroups, getMainMuscleGroup } from '../../../shared/services/data/exerciseLibraryService';
 import type { Workout, WorkoutDataByDate } from '../types/workout.types';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
 
@@ -62,6 +63,9 @@ export interface UseWorkoutHistoryReturn {
   
   // Form operations
   updateEditForm: (updates: Partial<EditFormState>) => void;
+  
+  // Muscle groups list
+  muscleGroupsList: string[];
 }
 
 /**
@@ -94,6 +98,9 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
     reps: '',
     weight: ''
   });
+  
+  // Dynamic muscle groups list (main groups from workouts)
+  const [muscleGroupsList, setMuscleGroupsList] = useState<string[]>([]);
 
   /**
    * 載入訓練記錄
@@ -119,6 +126,32 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
   }, [userId, t]);
 
   /**
+   * 載入動態肌肉群列表
+   * Load dynamic muscle groups list from user's workout history (main groups only)
+   */
+  const loadMuscleGroups = useCallback(() => {
+    try {
+      // Extract unique main muscle groups from workouts
+      // 從訓練記錄中提取唯一的主肌肉群
+      const mainGroupsSet = new Set<string>();
+      
+      workouts.forEach(workout => {
+        if (workout.muscleGroup) {
+          const mainGroup = getMainMuscleGroup(workout.muscleGroup);
+          mainGroupsSet.add(mainGroup);
+        }
+      });
+      
+      // Convert to sorted array
+      const mainGroupsList = Array.from(mainGroupsSet).sort();
+      setMuscleGroupsList(mainGroupsList);
+    } catch (error) {
+      console.error('載入肌肉群列表失敗:', error);
+      setMuscleGroupsList([]);
+    }
+  }, [workouts]);
+
+  /**
    * 處理下拉刷新
    * Handle pull to refresh
    */
@@ -131,6 +164,7 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
   /**
    * 處理訓練數據，按日期分組
    * Process workout data, grouped by date
+   * Uses main muscle groups for consistent grouping and colors
    */
   const workoutData = useMemo<WorkoutDataByDate>(() => {
     const processedData: WorkoutDataByDate = {};
@@ -150,9 +184,14 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
         };
       }
       
-      // Add muscle group (deduplicated)
-      if (!processedData[dateString].muscleGroups.includes(workout.muscleGroup)) {
-        processedData[dateString].muscleGroups.push(workout.muscleGroup);
+      // Get main muscle group for consistent grouping
+      // 獲取主肌肉群以進行一致的分組
+      const mainMuscleGroup = getMainMuscleGroup(workout.muscleGroup || '');
+      
+      // Add main muscle group (deduplicated)
+      // 添加主肌肉群（去重）
+      if (!processedData[dateString].muscleGroups.includes(mainMuscleGroup)) {
+        processedData[dateString].muscleGroups.push(mainMuscleGroup);
       }
       
       // Add workout record
@@ -385,12 +424,22 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
   }, []);
 
   /**
+   * 當訓練記錄變化時更新肌肉群列表
+   * Update muscle groups list when workouts change
+   */
+  useEffect(() => {
+    loadMuscleGroups();
+  }, [loadMuscleGroups]);
+
+  /**
    * 當頁面獲得焦點時重新載入數據
    * Reload data when screen gains focus
    */
   useFocusEffect(
     useCallback(() => {
       loadWorkouts();
+      // loadMuscleGroups will be called automatically when workouts change
+      // loadMuscleGroups 會在訓練記錄變化時自動調用
     }, [loadWorkouts])
   );
 
@@ -429,6 +478,9 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
     
     // Form operations
     updateEditForm,
+    
+    // Muscle groups list
+    muscleGroupsList,
   };
 };
 

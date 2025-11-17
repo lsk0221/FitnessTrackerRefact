@@ -19,7 +19,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Exercise, MUSCLE_GROUPS, EQUIPMENT_TYPES } from '../../../shared/services/data/exerciseLibraryService';
+import { Exercise, EQUIPMENT_TYPES } from '../../../shared/services/data/exerciseLibraryService';
 
 interface ExerciseSelectorProps {
   visible: boolean;
@@ -31,6 +31,7 @@ interface ExerciseSelectorProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onLoadExercises: () => Promise<void>;
+  muscleGroupsList?: string[]; // Dynamic muscle groups list (optional for backward compatibility)
   loading?: boolean;
   theme: any;
 }
@@ -49,6 +50,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   searchQuery,
   onSearchChange,
   onLoadExercises,
+  muscleGroupsList = [], // Default to empty array if not provided
   loading = false,
   theme,
 }) => {
@@ -299,7 +301,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.muscleGroupScrollContent}
                   >
-                    {MUSCLE_GROUPS.map((group) => (
+                    {muscleGroupsList.length > 0 ? muscleGroupsList.map((group) => (
                       <TouchableOpacity
                         key={group}
                         style={[
@@ -318,7 +320,11 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
                           {group}
                         </Text>
                       </TouchableOpacity>
-                    ))}
+                    )) : (
+                      <Text style={styles.muscleGroupButtonText}>
+                        {t('common.loading')}...
+                      </Text>
+                    )}
                   </ScrollView>
                 </View>
 

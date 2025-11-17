@@ -23,7 +23,7 @@ import { useProgress } from '../hooks/useProgress';
 import { ProgressChart } from '../components/ProgressChart';
 import { StatsCard } from '../components/StatsCard';
 import { ExerciseSelector } from '../components/ExerciseSelector';
-import { getExerciseName } from '../../../shared/data/exerciseMapping';
+// Removed getExerciseName import - using t() function instead
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -45,6 +45,7 @@ const ProgressChartScreen: React.FC = () => {
     targetWeight,
     isLoading,
     refreshing,
+    muscleGroupsList,
     handleMuscleGroupSelect,
     handleExerciseSelect,
     handleTimeRangeSelect,
@@ -143,6 +144,7 @@ const ProgressChartScreen: React.FC = () => {
           selectedTimeRange={selectedTimeRange}
           chartType={chartType}
           availableExercises={getAvailableExercisesForMuscleGroup()}
+          muscleGroupsList={muscleGroupsList}
           onMuscleGroupSelect={handleMuscleGroupSelect}
           onExerciseSelect={handleExerciseSelect}
           onTimeRangeSelect={handleTimeRangeSelect}
@@ -157,7 +159,7 @@ const ProgressChartScreen: React.FC = () => {
           <View style={styles.chartHeader}>
             <View style={styles.chartTitleContainer}>
               <Text style={styles.chartTitle}>
-                {selectedExercise ? getExerciseName(selectedExercise, language) : t('progress.selectAction')}
+                {selectedExercise ? t(selectedExercise) : t('progress.selectAction')}
               </Text>
 
               {/* Improvement Display */}
@@ -236,7 +238,17 @@ const ProgressChartScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {t('progress.setTarget')} {getExerciseName(selectedExercise, language)}{' '}
+              {t('progress.setTarget')} {selectedExercise ? (() => {
+                // selectedExercise is raw English string, convert to translation key
+                // selectedExercise 是原始英文字符串，轉換為翻譯鍵
+                const snakeCase = selectedExercise
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, '_')
+                  .replace(/^_+|_+$/g, '');
+                const translationKey = `exercises.${snakeCase}`;
+                const translated = t(translationKey);
+                return translated === translationKey ? selectedExercise : translated;
+              })() : ''}{' '}
               {chartType === 'volume' ? t('progress.targetVolume') : t('progress.targetWeight')}
             </Text>
             <TextInput
@@ -400,5 +412,6 @@ const createStyles = (theme: any) =>
   });
 
 export default ProgressChartScreen;
+
 
 

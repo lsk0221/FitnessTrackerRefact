@@ -10,8 +10,8 @@
 export interface Workout {
   id: string;
   date: string; // ISO string format
-  muscleGroup: string;
-  exercise: string;
+  muscleGroup: string; // Raw English string (e.g., 'Chest', 'Back', 'Legs')
+  exercise: string; // Raw English string (e.g., 'Barbell Bench Press', 'Pull-ups')
   sets: number;
   reps: number;
   weight: number; // Always stored in kg internally
@@ -25,8 +25,8 @@ export interface Workout {
  */
 export interface WorkoutInput {
   date?: string; // Optional, defaults to current date
-  muscleGroup: string;
-  exercise: string;
+  muscleGroup: string; // Raw English string (e.g., 'Chest', 'Back', 'Legs')
+  exercise: string; // Raw English string (e.g., 'Barbell Bench Press', 'Pull-ups')
   sets: number;
   reps: number;
   weight: number;

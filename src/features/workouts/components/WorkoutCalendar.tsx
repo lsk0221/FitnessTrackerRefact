@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Calendar from '../../../shared/components/ui/Calendar';
+import { getMuscleGroupColor } from '../../../shared/utils/helpers';
 import type { WorkoutDataByDate } from '../types/workout.types';
 
 interface WorkoutCalendarProps {
@@ -15,6 +16,7 @@ interface WorkoutCalendarProps {
   onDatePress: (date: Date, workout: { workouts: any[] }) => void;
   selectedDate: Date | null;
   onSelectedDateChange: (date: Date) => void;
+  muscleGroupsList?: string[]; // Dynamic muscle groups list for legend
 }
 
 /**
@@ -27,6 +29,7 @@ const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({
   onDatePress,
   selectedDate,
   onSelectedDateChange,
+  muscleGroupsList = [], // Default to empty array if not provided
 }) => {
   const { t } = useTranslation();
 
@@ -47,53 +50,34 @@ const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({
           {t('calendar.muscleGroupLegend')}
         </Text>
         
-        {Object.entries({
-          'chest': t('muscleGroups.chest'),
-          'shoulders': t('muscleGroups.shoulders'),
-          'back': t('muscleGroups.back'),
-          'legs': t('muscleGroups.legs'),
-          'arms': t('muscleGroups.arms'),
-          'core': t('muscleGroups.core'),
-          'cardio': t('muscleGroups.cardio'),
-        }).map(([key, label]) => (
-          <View key={key} style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendDot,
-                { backgroundColor: getMuscleGroupColor(key, theme) }
-              ]}
-            />
-            <Text style={[styles.legendText, { color: theme.textPrimary }]}>
-              {label}
-            </Text>
-          </View>
-        ))}
+        {/* Use dynamic muscle groups list if available, otherwise fallback to hardcoded list */}
+        {(muscleGroupsList.length > 0 ? muscleGroupsList : [
+          'Chest', 'Shoulders', 'Back', 'Legs', 'Arms', 'Core', 'Cardio', 'Full Body'
+        ]).map((muscleGroup) => {
+          const mainGroup = muscleGroup; // Already main groups from useWorkoutHistory
+          const translationKey = `muscleGroups.${mainGroup}`;
+          const translatedLabel = t(translationKey);
+          const displayLabel = translatedLabel === translationKey ? mainGroup : translatedLabel;
+          
+          return (
+            <View key={mainGroup} style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: getMuscleGroupColor(mainGroup, theme) }
+                ]}
+              />
+              <Text style={[styles.legendText, { color: theme.textPrimary }]}>
+                {displayLabel}
+              </Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
 };
 
-/**
- * 獲取肌肉群顏色
- * Get muscle group color
- */
-const getMuscleGroupColor = (muscleGroup: string, theme: any): string => {
-  // Core uses theme-adapted color
-  if (muscleGroup.toLowerCase() === 'core') {
-    return theme.textPrimary;
-  }
-  
-  const colors: Record<string, string> = {
-    'chest': '#00BCD4',      // Cyan
-    'shoulders': '#2196F3',  // Blue
-    'back': '#FF9800',       // Orange
-    'legs': '#9C27B0',       // Purple
-    'arms': '#F44336',       // Red
-    'cardio': '#795548',     // Brown
-  };
-  
-  return colors[muscleGroup.toLowerCase()] || '#00BCD4';
-};
 
 const styles = StyleSheet.create({
   container: {

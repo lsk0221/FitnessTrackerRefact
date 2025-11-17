@@ -5,8 +5,8 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
-import { MUSCLE_GROUPS, TIME_RANGE_OPTIONS } from '../../../shared/constants';
-import { getExerciseName } from '../../../shared/data/exerciseMapping';
+import { TIME_RANGE_OPTIONS } from '../../../shared/constants';
+// Removed getExerciseName import - using t() function instead
 import type { TimeRange, ChartType } from '../types/progress.types';
 
 interface ExerciseSelectorProps {
@@ -15,6 +15,7 @@ interface ExerciseSelectorProps {
   selectedTimeRange: TimeRange;
   chartType: ChartType;
   availableExercises: string[];
+  muscleGroupsList: string[]; // Dynamic muscle groups list
   onMuscleGroupSelect: (muscleGroup: string) => void;
   onExerciseSelect: (exercise: string) => void;
   onTimeRangeSelect: (timeRange: TimeRange) => void;
@@ -34,6 +35,7 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   selectedTimeRange,
   chartType,
   availableExercises,
+  muscleGroupsList,
   onMuscleGroupSelect,
   onExerciseSelect,
   onTimeRangeSelect,
@@ -64,7 +66,17 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           disabled={!selectedMuscleGroup}
         >
           <Text style={[styles.selectionButtonText, !selectedMuscleGroup && styles.disabledButtonText]}>
-            {selectedExercise ? getExerciseName(selectedExercise, language) : t('progress.selectExercise')}
+            {selectedExercise ? (() => {
+              // selectedExercise is raw English string, convert to translation key
+              // selectedExercise 是原始英文字符串，轉換為翻譯鍵
+              const snakeCase = selectedExercise
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+              const translationKey = `exercises.${snakeCase}`;
+              const translated = t(translationKey);
+              return translated === translationKey ? selectedExercise : translated;
+            })() : t('progress.selectExercise')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -105,18 +117,28 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('workout.selectMuscleGroup')}</Text>
             <ScrollView style={styles.modalScrollView}>
-              {MUSCLE_GROUPS.map(muscleGroup => (
-                <TouchableOpacity
-                  key={muscleGroup}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    onMuscleGroupSelect(muscleGroup);
-                    setShowMuscleGroupModal(false);
-                  }}
-                >
-                  <Text style={styles.modalOptionText}>{t(`muscleGroups.${muscleGroup}`)}</Text>
-                </TouchableOpacity>
-              ))}
+              {muscleGroupsList.map(muscleGroup => {
+                // Translate muscle group name using translation key
+                // 使用翻譯鍵翻譯肌肉群名稱
+                const translationKey = `muscleGroups.${muscleGroup}`;
+                const translatedName = t(translationKey);
+                // If translation returns the key itself (no translation found), use the original name
+                // 如果翻譯返回鍵本身（找不到翻譯），則使用原始名稱
+                const displayName = translatedName === translationKey ? muscleGroup : translatedName;
+                
+                return (
+                  <TouchableOpacity
+                    key={muscleGroup}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      onMuscleGroupSelect(muscleGroup);
+                      setShowMuscleGroupModal(false);
+                    }}
+                  >
+                    <Text style={styles.modalOptionText}>{displayName}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
             <TouchableOpacity style={styles.closeButton} onPress={() => setShowMuscleGroupModal(false)}>
               <Text style={styles.closeButtonText}>{t('common.close')}</Text>
@@ -306,5 +328,6 @@ const createStyles = (theme: any) =>
       fontWeight: 'bold',
     },
   });
+
 
 

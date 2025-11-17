@@ -12,8 +12,8 @@
  */
 export interface TemplateExercise {
   id: string;
-  exercise: string; // Exercise name
-  muscleGroup: string;
+  nameKey: string; // Translation key for exercise name (e.g., 'exercises.Barbell Bench Press')
+  muscleGroupKey: string; // Translation key for muscle group (e.g., 'muscleGroups.Chest')
   movementPattern?: string;
   equipment?: string;
   tags?: string[];
@@ -23,6 +23,9 @@ export interface TemplateExercise {
   weight?: number;
   restTime?: number;
   instructions?: string;
+  // Legacy fields for backward compatibility (deprecated)
+  exercise?: string; // Deprecated: use nameKey instead
+  muscleGroup?: string; // Deprecated: use muscleGroupKey instead
 }
 
 /**
@@ -31,11 +34,16 @@ export interface TemplateExercise {
  */
 export interface WorkoutTemplate {
   id: string;
-  name: string;
-  description: string;
+  nameKey?: string; // Translation key for template name (e.g., 'templates.ppl_push.name') - for preset templates
+  descriptionKey?: string; // Translation key for template description (e.g., 'templates.ppl_push.description') - for preset templates
+  difficultyKey?: string; // Translation key for difficulty (e.g., 'difficulties.Intermediate') - for preset templates
+  categoryKey?: string; // Translation key for category (e.g., 'categories.Strength') - for preset templates
   exercises: TemplateExercise[] | string; // Can be array or JSON string
-  category: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  // Legacy fields for backward compatibility (deprecated)
+  name?: string; // Deprecated: use nameKey for preset templates, or keep for user templates
+  description?: string; // Deprecated: use descriptionKey for preset templates, or keep for user templates
+  category?: string; // Deprecated: use categoryKey for preset templates, or keep for user templates
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced'; // Deprecated: use difficultyKey for preset templates, or keep for user templates
   estimatedTime?: number; // in minutes
   createdAt?: string;
   updatedAt?: string;

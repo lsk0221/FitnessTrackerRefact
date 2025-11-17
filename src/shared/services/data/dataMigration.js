@@ -6,7 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../constants';
 
-// 舊格式到新格式的映射
+// 舊格式到新格式的映射（小寫）
 const MUSCLE_GROUP_MAPPING = {
   // 英文格式
   'Chest': 'chest',
@@ -24,6 +24,25 @@ const MUSCLE_GROUP_MAPPING = {
   '手臂': 'arms',
   '核心': 'core',
   '有氧': 'cardio'
+};
+
+// 中文到英文的映射（用於數據清理，保持英文標準格式）
+const CHINESE_TO_ENGLISH_MAP = {
+  '胸部': 'Chest',
+  '背部': 'Back',
+  '腿部': 'Legs',
+  '股二頭肌': 'Hamstrings',
+  '股四頭肌': 'Quadriceps',
+  '小腿': 'Calves',
+  '肩部': 'Shoulders',
+  '肩膀': 'Shoulders',
+  '手臂': 'Arms',
+  '二頭肌': 'Biceps',
+  '三頭肌': 'Triceps',
+  '核心': 'Core',
+  '有氧': 'Cardio',
+  '全身': 'Full Body',
+  '斜方肌': 'Traps',
 };
 
 const EXERCISE_MAPPING = {
@@ -191,6 +210,7 @@ export const performDataMigration = async (storageKey) => {
 
 /**
  * 檢查並修復肌肉群格式不一致的問題
+ * 將中文肌肉群名稱轉換為英文標準格式
  * @param {Array} workouts - 訓練數據
  * @returns {Array} 修復後的訓練數據
  */
@@ -202,10 +222,20 @@ export const fixMuscleGroupInconsistency = (workouts) => {
   return workouts.map(workout => {
     const fixedWorkout = { ...workout };
     
-    // 修復肌肉群格式
-    if (workout.muscleGroup && MUSCLE_GROUP_MAPPING[workout.muscleGroup]) {
-      fixedWorkout.muscleGroup = MUSCLE_GROUP_MAPPING[workout.muscleGroup];
-      console.log(`修復肌肉群: ${workout.muscleGroup} -> ${fixedWorkout.muscleGroup}`);
+    // 修復肌肉群格式：優先使用中文到英文映射（保持英文標準格式）
+    if (workout.muscleGroup) {
+      // 檢查是否是中文肌肉群名稱
+      if (CHINESE_TO_ENGLISH_MAP[workout.muscleGroup]) {
+        fixedWorkout.muscleGroup = CHINESE_TO_ENGLISH_MAP[workout.muscleGroup];
+        console.log(`修復肌肉群: ${workout.muscleGroup} -> ${fixedWorkout.muscleGroup}`);
+      }
+      // 如果不在中文映射中，但存在於舊映射中，也進行轉換（保持向後兼容）
+      else if (MUSCLE_GROUP_MAPPING[workout.muscleGroup]) {
+        // 將小寫轉換為標準格式（首字母大寫）
+        const lowerCase = MUSCLE_GROUP_MAPPING[workout.muscleGroup];
+        fixedWorkout.muscleGroup = lowerCase.charAt(0).toUpperCase() + lowerCase.slice(1);
+        console.log(`修復肌肉群格式: ${workout.muscleGroup} -> ${fixedWorkout.muscleGroup}`);
+      }
     }
     
     return fixedWorkout;
@@ -214,6 +244,7 @@ export const fixMuscleGroupInconsistency = (workouts) => {
 
 /**
  * 檢查是否需要修復肌肉群格式不一致
+ * 檢查是否存在中文肌肉群名稱需要轉換為英文
  * @param {Array} workouts - 訓練數據
  * @returns {boolean} 是否需要修復
  */
@@ -223,7 +254,18 @@ export const needsMuscleGroupFix = (workouts) => {
   }
 
   return workouts.some(workout => {
-    return workout.muscleGroup && MUSCLE_GROUP_MAPPING[workout.muscleGroup];
+    if (!workout.muscleGroup) {
+      return false;
+    }
+    
+    // 檢查是否是中文肌肉群名稱（在中文到英文映射中）
+    const isChinese = CHINESE_TO_ENGLISH_MAP[workout.muscleGroup];
+    
+    // 檢查是否是小寫格式需要轉換（在舊映射中但不是標準格式）
+    const needsFormatFix = MUSCLE_GROUP_MAPPING[workout.muscleGroup] && 
+                           workout.muscleGroup !== workout.muscleGroup.charAt(0).toUpperCase() + workout.muscleGroup.slice(1).toLowerCase();
+    
+    return isChinese || needsFormatFix;
   });
 };
 

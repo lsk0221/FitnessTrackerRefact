@@ -49,6 +49,7 @@ const HistoryScreen: React.FC = () => {
     handleCloseModal,
     handleCloseEditModal,
     updateEditForm,
+    muscleGroupsList,
   } = useWorkoutHistory();
 
   const styles = StyleSheet.create({
@@ -105,6 +106,7 @@ const HistoryScreen: React.FC = () => {
           onDatePress={handleDatePress}
           selectedDate={selectedDate}
           onSelectedDateChange={handleDateChange}
+          muscleGroupsList={muscleGroupsList}
         />
       </ScrollView>
 
@@ -125,6 +127,7 @@ const HistoryScreen: React.FC = () => {
         onUpdateEditForm={updateEditForm}
         onCloseEditModal={handleCloseEditModal}
         onSaveEdit={handleSaveEdit}
+        muscleGroupsList={muscleGroupsList}
       />
     </View>
   );

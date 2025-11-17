@@ -14,17 +14,6 @@ export const TIME_RANGE_OPTIONS = [
   { label: '全部', value: 'all' },
 ];
 
-// 肌肉群選項（使用中文）
-export const MUSCLE_GROUPS = [
-  'chest',
-  'back', 
-  'legs',
-  'shoulders',
-  'arms',
-  'core',
-  'cardio'
-];
-
 // 訓練動作映射（使用中文）
 export const EXERCISE_MAPPING = {
   'chest': ['臥推', '啞鈴飛鳥', '伏地挺身', '上斜臥推'],

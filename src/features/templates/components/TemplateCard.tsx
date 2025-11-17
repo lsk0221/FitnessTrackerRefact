@@ -66,10 +66,14 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.templateName}>{template.name}</Text>
-          {template.difficulty && (
-            <View style={[styles.difficultyBadge, getDifficultyColor(template.difficulty)]}>
-              <Text style={styles.difficultyText}>{template.difficulty}</Text>
+          <Text style={styles.templateName}>
+            {template.nameKey ? t(template.nameKey) : (template.name || '')}
+          </Text>
+          {(template.difficultyKey || template.difficulty) && (
+            <View style={[styles.difficultyBadge, getDifficultyColor(template.difficulty || 'Intermediate')]}>
+              <Text style={styles.difficultyText}>
+                {template.difficultyKey ? t(template.difficultyKey) : (template.difficulty ? t(`difficulties.${template.difficulty}`) : '')}
+              </Text>
             </View>
           )}
         </View>
@@ -104,9 +108,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       </View>
 
       {/* Description */}
-      {template.description && (
+      {(template.descriptionKey || template.description) && (
         <Text style={styles.description} numberOfLines={2}>
-          {template.description}
+          {template.descriptionKey ? t(template.descriptionKey) : (template.description || '')}
         </Text>
       )}
 
@@ -124,9 +128,11 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           </View>
         )}
 
-        {template.category && (
+        {(template.categoryKey || template.category) && (
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{template.category}</Text>
+            <Text style={styles.categoryText}>
+              {template.categoryKey ? t(template.categoryKey) : (template.category ? t(`categories.${template.category}`) : '')}
+            </Text>
           </View>
         )}
       </View>

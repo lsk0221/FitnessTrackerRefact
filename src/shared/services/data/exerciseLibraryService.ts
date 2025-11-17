@@ -10,26 +10,51 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface Exercise {
   id: string;
-  name: string;
-  muscle_group: string;
+  nameKey: string; // Translation key for exercise name (e.g., 'exercises.Barbell Bench Press')
+  muscleGroupKey: string; // Translation key for muscle group (e.g., 'muscleGroups.Chest')
   movement_pattern: string;
   equipment: string;
   tags: string[];
   isCustom?: boolean; // Flag to indicate if this is a user-created exercise
+  // Legacy fields for backward compatibility (deprecated)
+  name?: string; // Deprecated: use nameKey instead
+  muscle_group?: string; // Deprecated: use muscleGroupKey instead
 }
 
 /**
- * Available muscle groups for exercises
+ * Muscle group mapping: sub-groups to main (parent) groups
+ * 肌肉群映射：子群組到主（父）群組
  */
-export const MUSCLE_GROUPS = [
-  'Chest',
-  'Back',
-  'Legs',
-  'Shoulders',
-  'Arms',
-  'Core',
-  'Cardio',
-] as const;
+const MUSCLE_GROUP_MAP: { [key: string]: string } = {
+  // Sub-groups map to main groups
+  'Hamstrings': 'Legs',
+  'Quadriceps': 'Legs',
+  'Calves': 'Legs',
+  'Biceps': 'Arms',
+  'Triceps': 'Arms',
+  'Traps': 'Back',
+  
+  // Main groups map to themselves
+  'Legs': 'Legs',
+  'Back': 'Back',
+  'Chest': 'Chest',
+  'Shoulders': 'Shoulders',
+  'Arms': 'Arms',
+  'Core': 'Core',
+  'Cardio': 'Cardio',
+  'Full Body': 'Full Body',
+};
+
+/**
+ * Get the main (parent) muscle group for a given sub-group
+ * 獲取給定子群組的主（父）肌肉群
+ * 
+ * @param subGroup - The muscle group name (can be sub-group or main group)
+ * @returns The main muscle group name
+ */
+export const getMainMuscleGroup = (subGroup: string): string => {
+  return MUSCLE_GROUP_MAP[subGroup] || subGroup; // Fallback to the original name if no map
+};
 
 /**
  * Available equipment types for exercises
@@ -56,56 +81,56 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Chest exercises
   {
     id: 'ex_chest_1',
-    name: 'Barbell Bench Press',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.barbell_bench_press',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Horizontal Press',
     equipment: 'Barbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_chest_2',
-    name: 'Incline Dumbbell Press',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.incline_dumbbell_press',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Incline Press',
     equipment: 'Dumbbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_chest_3',
-    name: 'Push-ups',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.push_ups',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Horizontal Press',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'push'],
   },
   {
     id: 'ex_chest_4',
-    name: 'Dumbbell Flyes',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.dumbbell_flyes',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Horizontal Fly',
     equipment: 'Dumbbell',
     tags: ['isolation', 'push'],
   },
   {
     id: 'ex_chest_5',
-    name: 'Cable Crossover',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.cable_crossover',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Horizontal Fly',
     equipment: 'Cable',
     tags: ['isolation', 'push'],
   },
   {
     id: 'ex_chest_6',
-    name: 'Decline Bench Press',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.decline_bench_press',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Decline Press',
     equipment: 'Barbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_chest_7',
-    name: 'Chest Dips',
-    muscle_group: 'Chest',
+    nameKey: 'exercises.chest_dips',
+    muscleGroupKey: 'muscleGroups.Chest',
     movement_pattern: 'Dip',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'push', 'compound'],
@@ -114,64 +139,64 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Back exercises
   {
     id: 'ex_back_1',
-    name: 'Deadlift',
-    muscle_group: 'Back',
+    nameKey: 'exercises.deadlift',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Hip Hinge',
     equipment: 'Barbell',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_2',
-    name: 'Pull-ups',
-    muscle_group: 'Back',
+    nameKey: 'exercises.pull_ups',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Vertical Pull',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'pull', 'compound'],
   },
   {
     id: 'ex_back_3',
-    name: 'Barbell Rows',
-    muscle_group: 'Back',
+    nameKey: 'exercises.barbell_rows',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Horizontal Pull',
     equipment: 'Barbell',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_4',
-    name: 'Lat Pulldowns',
-    muscle_group: 'Back',
+    nameKey: 'exercises.lat_pulldowns',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Vertical Pull',
     equipment: 'Machine',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_5',
-    name: 'T-Bar Row',
-    muscle_group: 'Back',
+    nameKey: 'exercises.t_bar_row',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Horizontal Pull',
     equipment: 'Barbell',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_6',
-    name: 'Seated Cable Row',
-    muscle_group: 'Back',
+    nameKey: 'exercises.seated_cable_row',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Horizontal Pull',
     equipment: 'Cable',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_7',
-    name: 'One-arm Dumbbell Row',
-    muscle_group: 'Back',
+    nameKey: 'exercises.one_arm_dumbbell_row',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Horizontal Pull',
     equipment: 'Dumbbell',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_back_8',
-    name: 'Face Pulls',
-    muscle_group: 'Back',
+    nameKey: 'exercises.face_pulls',
+    muscleGroupKey: 'muscleGroups.Back',
     movement_pattern: 'Horizontal Pull',
     equipment: 'Cable',
     tags: ['isolation', 'pull'],
@@ -180,64 +205,64 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Legs exercises
   {
     id: 'ex_legs_1',
-    name: 'Squat',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.squat',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Squat',
     equipment: 'Barbell',
     tags: ['compound', 'legs'],
   },
   {
     id: 'ex_legs_2',
-    name: 'Romanian Deadlift',
-    muscle_group: 'Hamstrings',
+    nameKey: 'exercises.romanian_deadlift',
+    muscleGroupKey: 'muscleGroups.Hamstrings',
     movement_pattern: 'Hip Hinge',
     equipment: 'Barbell',
     tags: ['compound', 'legs'],
   },
   {
     id: 'ex_legs_3',
-    name: 'Lunges',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.lunges',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Lunge',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'legs'],
   },
   {
     id: 'ex_legs_4',
-    name: 'Calf Raises',
-    muscle_group: 'Calves',
+    nameKey: 'exercises.calf_raises',
+    muscleGroupKey: 'muscleGroups.Calves',
     movement_pattern: 'Calf Raise',
     equipment: 'Bodyweight',
     tags: ['isolation', 'legs'],
   },
   {
     id: 'ex_legs_5',
-    name: 'Leg Press',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.leg_press',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Squat',
     equipment: 'Machine',
     tags: ['compound', 'legs'],
   },
   {
     id: 'ex_legs_6',
-    name: 'Leg Curls',
-    muscle_group: 'Hamstrings',
+    nameKey: 'exercises.leg_curls',
+    muscleGroupKey: 'muscleGroups.Hamstrings',
     movement_pattern: 'Curl',
     equipment: 'Machine',
     tags: ['isolation', 'legs'],
   },
   {
     id: 'ex_legs_7',
-    name: 'Leg Extensions',
-    muscle_group: 'Quadriceps',
+    nameKey: 'exercises.leg_extensions',
+    muscleGroupKey: 'muscleGroups.Quadriceps',
     movement_pattern: 'Extension',
     equipment: 'Machine',
     tags: ['isolation', 'legs'],
   },
   {
     id: 'ex_legs_8',
-    name: 'Bulgarian Split Squats',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.bulgarian_split_squats',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Lunge',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'legs', 'unilateral'],
@@ -246,56 +271,56 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Shoulders exercises
   {
     id: 'ex_shoulders_1',
-    name: 'Overhead Press',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.overhead_press',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Vertical Press',
     equipment: 'Barbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_shoulders_2',
-    name: 'Lateral Raises',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.lateral_raises',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Lateral Raise',
     equipment: 'Dumbbell',
     tags: ['isolation', 'push'],
   },
   {
     id: 'ex_shoulders_3',
-    name: 'Rear Delt Flyes',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.rear_delt_flyes',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Horizontal Fly',
     equipment: 'Dumbbell',
     tags: ['isolation', 'pull'],
   },
   {
     id: 'ex_shoulders_4',
-    name: 'Arnold Press',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.arnold_press',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Vertical Press',
     equipment: 'Dumbbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_shoulders_5',
-    name: 'Front Raises',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.front_raises',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Front Raise',
     equipment: 'Dumbbell',
     tags: ['isolation', 'push'],
   },
   {
     id: 'ex_shoulders_6',
-    name: 'Upright Row',
-    muscle_group: 'Shoulders',
+    nameKey: 'exercises.upright_row',
+    muscleGroupKey: 'muscleGroups.Shoulders',
     movement_pattern: 'Vertical Pull',
     equipment: 'Barbell',
     tags: ['compound', 'pull'],
   },
   {
     id: 'ex_shoulders_7',
-    name: 'Shrugs',
-    muscle_group: 'Traps',
+    nameKey: 'exercises.shrugs',
+    muscleGroupKey: 'muscleGroups.Traps',
     movement_pattern: 'Shrug',
     equipment: 'Barbell',
     tags: ['isolation', 'pull'],
@@ -304,64 +329,64 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Arms exercises
   {
     id: 'ex_arms_1',
-    name: 'Barbell Curls',
-    muscle_group: 'Biceps',
+    nameKey: 'exercises.barbell_curls',
+    muscleGroupKey: 'muscleGroups.Biceps',
     movement_pattern: 'Curl',
     equipment: 'Barbell',
     tags: ['isolation', 'pull'],
   },
   {
     id: 'ex_arms_2',
-    name: 'Tricep Dips',
-    muscle_group: 'Triceps',
+    nameKey: 'exercises.tricep_dips',
+    muscleGroupKey: 'muscleGroups.Triceps',
     movement_pattern: 'Dip',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'push'],
   },
   {
     id: 'ex_arms_3',
-    name: 'Hammer Curls',
-    muscle_group: 'Biceps',
+    nameKey: 'exercises.hammer_curls',
+    muscleGroupKey: 'muscleGroups.Biceps',
     movement_pattern: 'Curl',
     equipment: 'Dumbbell',
     tags: ['isolation', 'pull'],
   },
   {
     id: 'ex_arms_4',
-    name: 'Tricep Pushdowns',
-    muscle_group: 'Triceps',
+    nameKey: 'exercises.tricep_pushdowns',
+    muscleGroupKey: 'muscleGroups.Triceps',
     movement_pattern: 'Extension',
     equipment: 'Cable',
     tags: ['isolation', 'push'],
   },
   {
     id: 'ex_arms_5',
-    name: 'Preacher Curls',
-    muscle_group: 'Biceps',
+    nameKey: 'exercises.preacher_curls',
+    muscleGroupKey: 'muscleGroups.Biceps',
     movement_pattern: 'Curl',
     equipment: 'Barbell',
     tags: ['isolation', 'pull'],
   },
   {
     id: 'ex_arms_6',
-    name: 'Close-grip Bench Press',
-    muscle_group: 'Triceps',
+    nameKey: 'exercises.close_grip_bench_press',
+    muscleGroupKey: 'muscleGroups.Triceps',
     movement_pattern: 'Horizontal Press',
     equipment: 'Barbell',
     tags: ['compound', 'push'],
   },
   {
     id: 'ex_arms_7',
-    name: 'Cable Curls',
-    muscle_group: 'Biceps',
+    nameKey: 'exercises.cable_curls',
+    muscleGroupKey: 'muscleGroups.Biceps',
     movement_pattern: 'Curl',
     equipment: 'Cable',
     tags: ['isolation', 'pull'],
   },
   {
     id: 'ex_arms_8',
-    name: 'Overhead Tricep Extension',
-    muscle_group: 'Triceps',
+    nameKey: 'exercises.overhead_tricep_extension',
+    muscleGroupKey: 'muscleGroups.Triceps',
     movement_pattern: 'Extension',
     equipment: 'Dumbbell',
     tags: ['isolation', 'push'],
@@ -370,64 +395,64 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Core exercises
   {
     id: 'ex_core_1',
-    name: 'Plank',
-    muscle_group: 'Core',
+    nameKey: 'exercises.plank',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Isometric',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core', 'isometric'],
   },
   {
     id: 'ex_core_2',
-    name: 'Russian Twists',
-    muscle_group: 'Core',
+    nameKey: 'exercises.russian_twists',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Rotation',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core'],
   },
   {
     id: 'ex_core_3',
-    name: 'Mountain Climbers',
-    muscle_group: 'Core',
+    nameKey: 'exercises.mountain_climbers',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Dynamic',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core', 'cardio'],
   },
   {
     id: 'ex_core_4',
-    name: 'Crunches',
-    muscle_group: 'Core',
+    nameKey: 'exercises.crunches',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Flexion',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core'],
   },
   {
     id: 'ex_core_5',
-    name: 'Dead Bug',
-    muscle_group: 'Core',
+    nameKey: 'exercises.dead_bug',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Anti-Extension',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core'],
   },
   {
     id: 'ex_core_6',
-    name: 'Bicycle Crunches',
-    muscle_group: 'Core',
+    nameKey: 'exercises.bicycle_crunches',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Rotation',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core'],
   },
   {
     id: 'ex_core_7',
-    name: 'Leg Raises',
-    muscle_group: 'Core',
+    nameKey: 'exercises.leg_raises',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Flexion',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'core'],
   },
   {
     id: 'ex_core_8',
-    name: 'Wood Chops',
-    muscle_group: 'Core',
+    nameKey: 'exercises.wood_chops',
+    muscleGroupKey: 'muscleGroups.Core',
     movement_pattern: 'Rotation',
     equipment: 'Cable',
     tags: ['core', 'rotation'],
@@ -436,56 +461,56 @@ const EXERCISE_LIBRARY: Exercise[] = [
   // Cardio exercises
   {
     id: 'ex_cardio_1',
-    name: 'Burpees',
-    muscle_group: 'Full Body',
+    nameKey: 'exercises.burpees',
+    muscleGroupKey: 'muscleGroups.Full Body',
     movement_pattern: 'Compound',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'cardio', 'full-body'],
   },
   {
     id: 'ex_cardio_2',
-    name: 'Jump Squats',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.jump_squats',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Explosive',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'cardio', 'explosive'],
   },
   {
     id: 'ex_cardio_3',
-    name: 'High Knees',
-    muscle_group: 'Legs',
+    nameKey: 'exercises.high_knees',
+    muscleGroupKey: 'muscleGroups.Legs',
     movement_pattern: 'Dynamic',
     equipment: 'Bodyweight',
     tags: ['bodyweight', 'cardio'],
   },
   {
     id: 'ex_cardio_4',
-    name: 'Running',
-    muscle_group: 'Cardio',
+    nameKey: 'exercises.running',
+    muscleGroupKey: 'muscleGroups.Cardio',
     movement_pattern: 'Locomotion',
     equipment: 'None',
     tags: ['cardio', 'endurance'],
   },
   {
     id: 'ex_cardio_5',
-    name: 'Cycling',
-    muscle_group: 'Cardio',
+    nameKey: 'exercises.cycling',
+    muscleGroupKey: 'muscleGroups.Cardio',
     movement_pattern: 'Locomotion',
     equipment: 'Bike',
     tags: ['cardio', 'endurance'],
   },
   {
     id: 'ex_cardio_6',
-    name: 'Jump Rope',
-    muscle_group: 'Cardio',
+    nameKey: 'exercises.jump_rope',
+    muscleGroupKey: 'muscleGroups.Cardio',
     movement_pattern: 'Jump',
     equipment: 'Rope',
     tags: ['cardio', 'coordination'],
   },
   {
     id: 'ex_cardio_7',
-    name: 'Rowing Machine',
-    muscle_group: 'Full Body',
+    nameKey: 'exercises.rowing_machine',
+    muscleGroupKey: 'muscleGroups.Full Body',
     movement_pattern: 'Pull',
     equipment: 'Machine',
     tags: ['cardio', 'full-body'],
@@ -527,8 +552,13 @@ export const getExercisesByMuscleGroup = async (
   muscleGroup: string
 ): Promise<ExerciseServiceResponse<Exercise[]>> => {
   try {
+    const muscleGroupKey = `muscleGroups.${muscleGroup}`;
     const filtered = EXERCISE_LIBRARY.filter(
-      (exercise) => exercise.muscle_group.toLowerCase() === muscleGroup.toLowerCase()
+      (exercise) => {
+        // Check both new muscleGroupKey and legacy muscle_group for backward compatibility
+        const exerciseMuscleGroup = exercise.muscleGroupKey || exercise.muscle_group;
+        return exerciseMuscleGroup === muscleGroupKey || exerciseMuscleGroup === muscleGroup;
+      }
     );
     return {
       success: true,
@@ -577,11 +607,21 @@ export const searchExercises = async (
   try {
     const lowercaseQuery = query.toLowerCase();
     const filtered = EXERCISE_LIBRARY.filter(
-      (exercise) =>
-        exercise.name.toLowerCase().includes(lowercaseQuery) ||
-        exercise.muscle_group.toLowerCase().includes(lowercaseQuery) ||
-        exercise.equipment.toLowerCase().includes(lowercaseQuery) ||
-        exercise.movement_pattern.toLowerCase().includes(lowercaseQuery)
+      (exercise) => {
+        // Extract actual names from translation keys for searching
+        // 從翻譯鍵中提取實際名稱用於搜索
+        const nameKey = exercise.nameKey || exercise.name || '';
+        const muscleGroupKey = exercise.muscleGroupKey || exercise.muscle_group || '';
+        const name = nameKey.replace('exercises.', '');
+        const muscleGroup = muscleGroupKey.replace('muscleGroups.', '');
+        
+        return (
+          name.toLowerCase().includes(lowercaseQuery) ||
+          muscleGroup.toLowerCase().includes(lowercaseQuery) ||
+          exercise.equipment.toLowerCase().includes(lowercaseQuery) ||
+          exercise.movement_pattern.toLowerCase().includes(lowercaseQuery)
+        );
+      }
     );
     return {
       success: true,
@@ -602,7 +642,14 @@ export const searchExercises = async (
  */
 export const getMuscleGroups = async (): Promise<ExerciseServiceResponse<string[]>> => {
   try {
-    const muscleGroups = [...new Set(EXERCISE_LIBRARY.map((exercise) => exercise.muscle_group))];
+    // Extract muscle group names from translation keys
+    // 從翻譯鍵中提取肌肉群名稱
+    const muscleGroups = [...new Set(EXERCISE_LIBRARY.map((exercise) => {
+      const muscleGroupKey = exercise.muscleGroupKey || exercise.muscle_group || '';
+      // Extract the actual muscle group name from the key (e.g., 'muscleGroups.Chest' -> 'Chest')
+      // 從鍵中提取實際的肌肉群名稱（例如，'muscleGroups.Chest' -> 'Chest'）
+      return muscleGroupKey.replace('muscleGroups.', '');
+    }).filter(mg => mg))];
     return {
       success: true,
       data: muscleGroups.sort(),
@@ -760,7 +807,10 @@ export const saveCustomExercise = async (
 
     // Check for duplicates (case-insensitive)
     const duplicate = existingExercises.find(
-      (ex) => ex.name.toLowerCase() === trimmedName.toLowerCase()
+      (ex) => {
+        const exName = ex.nameKey?.replace('exercises.', '') || ex.name || '';
+        return exName.toLowerCase() === trimmedName.toLowerCase();
+      }
     );
 
     if (duplicate) {
@@ -770,11 +820,22 @@ export const saveCustomExercise = async (
       };
     }
 
-    // Create new custom exercise
+    // Convert exercise name to snake_case for translation key
+    // 將動作名稱轉換為 snake_case 格式的翻譯鍵
+    const nameToSnakeCase = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    };
+    
+    // Create new custom exercise with translation keys
+    // 使用翻譯鍵創建新的自定義動作
+    const exerciseKey = nameToSnakeCase(trimmedName);
     const newExercise: Exercise = {
       id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: trimmedName,
-      muscle_group: muscleGroup,
+      nameKey: `exercises.${exerciseKey}`, // Store as translation key in snake_case
+      muscleGroupKey: `muscleGroups.${muscleGroup}`, // Store as translation key
       movement_pattern: 'Custom',
       equipment: equipment,
       tags: ['custom'],

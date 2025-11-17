@@ -12,10 +12,6 @@ import {
   fixMuscleGroupInconsistency, 
   needsMuscleGroupFix 
 } from '../../../shared/services/data/dataMigration';
-import { 
-  migrateExerciseData, 
-  needsExerciseMigration 
-} from '../../../shared/utils/data/exerciseDataMigration';
 import type { 
   Workout, 
   WorkoutInput, 
@@ -59,16 +55,11 @@ export const loadWorkouts = async (userId?: string): Promise<WorkoutServiceResul
       } else {
         console.error('數據遷移失敗，使用原始數據');
       }
-    } else if (needsExerciseMigration(workouts)) {
-      console.log('檢測到訓練動作數據需要遷移...');
-      workouts = migrateExerciseData(workouts);
-      await AsyncStorage.setItem(dataKey, JSON.stringify(workouts));
-      console.log('訓練動作數據遷移完成');
     } else if (needsMuscleGroupFix(workouts)) {
-      console.log('檢測到肌肉群格式不一致，開始修復...');
+      console.log('檢測到中文肌肉群數據，開始遷移到英文...');
       workouts = fixMuscleGroupInconsistency(workouts);
       await AsyncStorage.setItem(dataKey, JSON.stringify(workouts));
-      console.log('肌肉群格式修復完成');
+      console.log('肌肉群數據遷移完成');
     }
     
     return { success: true, data: workouts };
@@ -102,8 +93,8 @@ export const saveWorkout = async (
     const newWorkout: Workout = {
       id: generateUniqueId(),
       date: workoutData.date || new Date().toISOString(),
-      muscleGroup: workoutData.muscleGroup,
-      exercise: workoutData.exercise,
+      muscleGroup: workoutData.muscleGroup || '', // Raw English string
+      exercise: workoutData.exercise || '', // Raw English string
       sets: workoutData.sets,
       reps: workoutData.reps,
       weight: workoutData.weight,
@@ -126,6 +117,71 @@ export const saveWorkout = async (
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '保存訓練記錄失敗' 
+    };
+  }
+};
+
+/**
+ * 批量保存多個訓練記錄
+ * Save multiple workout records efficiently
+ */
+export const saveMultipleWorkouts = async (
+  workouts: WorkoutInput[],
+  userId?: string
+): Promise<WorkoutServiceResult<Workout[]>> => {
+  try {
+    if (!workouts || workouts.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // Validate all workouts first
+    const validationErrors: string[] = [];
+    workouts.forEach((workout, index) => {
+      const validation = validateInput(workout);
+      if (!validation.isValid) {
+        validationErrors.push(`Workout ${index + 1}: ${validation.errors.join(', ')}`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return {
+        success: false,
+        error: validationErrors.join('; '),
+      };
+    }
+
+    const dataKey = getStorageKey(userId);
+    
+    // Read the latest data from storage
+    const stored = await AsyncStorage.getItem(dataKey);
+    const currentWorkouts: Workout[] = stored ? JSON.parse(stored) : [];
+    
+    // Create new Workout objects from WorkoutInput
+    // 從 WorkoutInput 創建新的 Workout 對象
+    const newWorkouts: Workout[] = workouts.map(workoutData => ({
+      id: generateUniqueId(),
+      date: workoutData.date || new Date().toISOString(),
+      muscleGroup: workoutData.muscleGroup || '', // Raw English string
+      exercise: workoutData.exercise || '', // Raw English string
+      sets: workoutData.sets,
+      reps: workoutData.reps,
+      weight: workoutData.weight,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    
+    // Merge with existing workouts
+    const updatedWorkouts = [...currentWorkouts, ...newWorkouts];
+    
+    // Save all at once
+    await AsyncStorage.setItem(dataKey, JSON.stringify(updatedWorkouts));
+    
+    return { success: true, data: newWorkouts };
+  } catch (error) {
+    console.error('批量保存訓練記錄失敗:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '批量保存訓練記錄失敗',
     };
   }
 };
@@ -255,12 +311,14 @@ export const getWorkoutsByExercise = async (
       return result;
     }
 
+    // Filter by raw exercise name (case-insensitive) and valid date
+    // 根據原始動作名稱過濾（不區分大小寫）和有效日期
+    // Note: Do NOT filter by weight here - weight filtering should be done in progressService based on chartType
+    // 注意：這裡不過濾重量 - 重量過濾應在 progressService 中根據 chartType 進行
     const filteredWorkouts = result.data
       .filter(workout => 
-        workout.exercise === exercise && 
-        workout.weight && 
-        !isNaN(workout.weight) && 
-        workout.weight > 0 &&
+        workout.exercise && 
+        workout.exercise.toLowerCase() === exercise.toLowerCase() &&
         workout.date &&
         !isNaN(new Date(workout.date).getTime())
       )
@@ -319,7 +377,9 @@ export const getAvailableExercises = async (
       return { success: false, error: result.error };
     }
 
-    const exercises = [...new Set(result.data.map(workout => workout.exercise))];
+    // Get unique exercise names (raw English strings)
+    // 獲取唯一的動作名稱（原始英文字符串）
+    const exercises = [...new Set(result.data.map(workout => workout.exercise || '').filter(ex => ex))];
     
     return { success: true, data: exercises };
   } catch (error) {
@@ -420,6 +480,62 @@ export const queryWorkouts = async (
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '查詢訓練記錄失敗' 
+    };
+  }
+};
+
+/**
+ * 獲取用戶實際執行的動作列表（包含動作名稱和肌肉群）
+ * Get list of exercises that user has actually performed (with exercise name and muscle group)
+ */
+export interface PerformedExercise {
+  name: string;
+  muscleGroup: string;
+}
+
+export const getPerformedExercisesList = async (
+  userId?: string
+): Promise<WorkoutServiceResult<PerformedExercise[]>> => {
+  try {
+    const result = await loadWorkouts(userId);
+    
+    if (!result.success || !result.data) {
+      return {
+        success: false,
+        error: result.error || 'Failed to load workouts',
+      };
+    }
+
+    // Create a map to store unique exercises (exercise name + muscle group combination)
+    // 創建映射以存儲獨特的動作（動作名稱 + 肌肉群組合）
+    const exerciseMap = new Map<string, PerformedExercise>();
+    
+    result.data.forEach(workout => {
+      // Use raw English strings directly
+      // 直接使用原始英文字符串
+      const exerciseName = workout.exercise || '';
+      const muscleGroupName = workout.muscleGroup || '';
+      
+      if (exerciseName && muscleGroupName && !exerciseMap.has(exerciseName)) {
+        exerciseMap.set(exerciseName, {
+          name: exerciseName, // Raw English string (e.g., "Pull-ups")
+          muscleGroup: muscleGroupName, // Raw English string (e.g., "Back")
+        });
+      }
+    });
+    
+    // Convert map to array
+    const performedExercises = Array.from(exerciseMap.values());
+    
+    return {
+      success: true,
+      data: performedExercises,
+    };
+  } catch (error) {
+    console.error('獲取已執行動作列表失敗:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '獲取已執行動作列表失敗',
     };
   }
 };

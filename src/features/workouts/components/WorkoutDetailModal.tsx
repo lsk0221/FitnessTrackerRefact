@@ -3,7 +3,7 @@
  * 訓練詳情模態框組件 - 顯示和編輯訓練記錄
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import i18n from '../../../shared/i18n';
 import { formatDate } from '../../../shared/utils/helpers';
-import { MUSCLE_GROUPS } from '../../../shared/constants';
-import { getExercisesForMuscleGroup } from '../../../shared/data/exerciseMapping';
+import { getAllExercises } from '../../../shared/services/data/exerciseLibraryService';
 import { PlusIcon } from '../../../shared/components/navigation/TabIcons';
 import WorkoutList from './WorkoutList';
 import type { Workout } from '../types/workout.types';
 import type { EditFormState } from '../hooks/useWorkoutHistory';
+import type { Exercise } from '../../../shared/services/data/exerciseLibraryService';
 
 interface WorkoutDetailModalProps {
   theme: any;
@@ -43,6 +43,7 @@ interface WorkoutDetailModalProps {
   onUpdateEditForm: (updates: Partial<EditFormState>) => void;
   onCloseEditModal: () => void;
   onSaveEdit: () => void;
+  muscleGroupsList?: string[]; // Dynamic muscle groups list
 }
 
 /**
@@ -65,8 +66,34 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   onUpdateEditForm,
   onCloseEditModal,
   onSaveEdit,
+  muscleGroupsList = [], // Default to empty array if not provided
 }) => {
   const { t } = useTranslation();
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+
+  // Load all exercises on mount
+  useEffect(() => {
+    const loadExercises = async () => {
+      const result = await getAllExercises();
+      if (result.success && result.data) {
+        setAllExercises(result.data);
+      }
+    };
+    loadExercises();
+  }, []);
+
+  // Helper function to get exercises for a muscle group
+  const getExercisesForMuscleGroup = (muscleGroup: string): string[] => {
+    const muscleGroupKey = `muscleGroups.${muscleGroup}`;
+    const filtered = allExercises.filter(ex => {
+      const exMuscleGroup = ex.muscleGroupKey || ex.muscle_group || '';
+      return exMuscleGroup === muscleGroupKey || exMuscleGroup === muscleGroup;
+    });
+    return filtered.map(ex => {
+      const nameKey = ex.nameKey || ex.name || '';
+      return nameKey.startsWith('exercises.') ? nameKey : `exercises.${nameKey}`;
+    });
+  };
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -274,29 +301,43 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('workout.muscleGroup')}</Text>
                 <View style={styles.muscleGroupContainer}>
-                  {MUSCLE_GROUPS.map((group) => (
-                    <TouchableOpacity
-                      key={group}
-                      style={[
-                        styles.muscleGroupOption,
-                        editForm.muscleGroup === group && styles.selectedMuscleGroup,
-                      ]}
-                      onPress={() => onUpdateEditForm({ muscleGroup: group })}
-                    >
-                      <Text
+                  {muscleGroupsList.length > 0 ? muscleGroupsList.map((group) => {
+                    // Translate muscle group name using translation key
+                    // 使用翻譯鍵翻譯肌肉群名稱
+                    const translationKey = `muscleGroups.${group}`;
+                    const translatedName = t(translationKey);
+                    // If translation returns the key itself (no translation found), use the original name
+                    // 如果翻譯返回鍵本身（找不到翻譯），則使用原始名稱
+                    const displayName = translatedName === translationKey ? group : translatedName;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={group}
                         style={[
-                          styles.muscleGroupOptionText,
-                          {
-                            color: editForm.muscleGroup === group
-                              ? '#ffffff'
-                              : theme.textPrimary,
-                          },
+                          styles.muscleGroupOption,
+                          editForm.muscleGroup === group && styles.selectedMuscleGroup,
                         ]}
+                        onPress={() => onUpdateEditForm({ muscleGroup: group })}
                       >
-                        {t(`muscleGroups.${group}`)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          style={[
+                            styles.muscleGroupOptionText,
+                            {
+                              color: editForm.muscleGroup === group
+                                ? '#ffffff'
+                                : theme.textPrimary,
+                            },
+                          ]}
+                        >
+                          {displayName}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }) : (
+                    <Text style={styles.muscleGroupOptionText}>
+                      {t('common.loading')}...
+                    </Text>
+                  )}
                 </View>
               </View>
 
@@ -315,7 +356,7 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                       );
                     } else {
                       // Show all exercises if no muscle group selected
-                      exercisesToShow = Object.values(MUSCLE_GROUPS).flatMap(group =>
+                      exercisesToShow = muscleGroupsList.flatMap(group =>
                         getExercisesForMuscleGroup(group, currentLanguage)
                       );
                       // Deduplicate

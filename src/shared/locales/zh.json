@@ -52,6 +52,7 @@
     "noUserTemplates": "還沒有自訂範本，創建您的第一個範本！",
     "noPresetTemplates": "暫無預設範本",
     "exercises": "個動作",
+    "estimatedTime": "預計時間",
     "preset": "預設",
     "copyTemplate": "複製範本",
     "copyTemplateMessage": "複製「{{name}}」來創建您自己的版本？",
@@ -59,7 +60,23 @@
     "deleteTemplateMessage": "確定要刪除「{{name}}」嗎？",
     "templateDeleted": "範本已刪除",
     "deleteFailed": "刪除範本失敗",
-    "loadFailed": "載入範本失敗"
+    "loadFailed": "載入範本失敗",
+    "ppl_push": {
+      "name": "經典 PPL - 推",
+      "description": "專注於胸部、肩部和三頭肌的經典推力日。"
+    },
+    "ppl_pull": {
+      "name": "經典 PPL - 拉",
+      "description": "專注於背部和二頭肌的經典拉力日。"
+    },
+    "ppl_legs": {
+      "name": "經典 PPL - 腿部",
+      "description": "專注於股四頭肌、股二頭肌和臀部的腿部訓練日。"
+    },
+    "hiit_cardio": {
+      "name": "HIIT 有氧爆發",
+      "description": "高強度間歇訓練，提升心血管健康。"
+    }
   },
   "templateEditor": {
     "title": "範本編輯器",
@@ -129,6 +146,8 @@
     "restTime": "休息時間",
     "addSet": "添加組數",
     "finishExercise": "完成動作",
+    "finishWorkout": "完成訓練",
+    "finishWorkoutMessage": "您確定要完成本次訓練嗎？",
     "workoutComplete": "訓練完成！",
     "workoutCompleteMessage": "太棒了！您的訓練已保存。",
     "saveFailed": "保存訓練失敗"
@@ -308,6 +327,20 @@
     "month": "月"
   },
   "muscleGroups": {
+    "Chest": "胸部",
+    "Back": "背部",
+    "Legs": "腿部",
+    "Shoulders": "肩部",
+    "Arms": "手臂",
+    "Core": "核心",
+    "Cardio": "有氧",
+    "Full Body": "全身",
+    "Hamstrings": "股二頭肌",
+    "Calves": "小腿",
+    "Biceps": "二頭肌",
+    "Triceps": "三頭肌",
+    "Traps": "斜方肌",
+    "Quadriceps": "股四頭肌",
     "chest": "胸部",
     "shoulders": "肩膀",
     "back": "背部",
@@ -370,5 +403,72 @@
     "syncFailed": "同步失敗",
     "saveFailed": "保存失敗",
     "loadFailed": "載入失敗"
+  },
+  "difficulties": {
+    "Beginner": "初級",
+    "Intermediate": "中級",
+    "Advanced": "高級"
+  },
+  "categories": {
+    "Strength": "力量",
+    "Cardio": "有氧",
+    "Hypertrophy": "肌肥大",
+    "Endurance": "耐力",
+    "Custom": "自定義"
+  },
+  "exercises": {
+    "barbell_bench_press": "槓鈴臥推",
+    "incline_dumbbell_press": "上斜啞鈴臥推",
+    "push_ups": "伏地挺身",
+    "dumbbell_flyes": "啞鈴飛鳥",
+    "cable_crossover": "纜繩交叉",
+    "decline_bench_press": "下斜臥推",
+    "chest_dips": "胸部撐體",
+    "deadlift": "硬舉",
+    "pull_ups": "引體向上",
+    "barbell_rows": "槓鈴划船",
+    "lat_pulldowns": "下拉",
+    "t_bar_row": "T槓划船",
+    "seated_cable_row": "坐姿划船",
+    "one_arm_dumbbell_row": "單臂啞鈴划船",
+    "face_pulls": "面拉",
+    "squat": "深蹲",
+    "romanian_deadlift": "羅馬尼亞硬舉",
+    "lunges": "弓步",
+    "calf_raises": "提踵",
+    "leg_press": "腿舉",
+    "leg_curls": "腿彎舉",
+    "leg_extensions": "腿伸展",
+    "bulgarian_split_squats": "保加利亞分腿蹲",
+    "overhead_press": "肩推",
+    "lateral_raises": "側平舉",
+    "rear_delt_flyes": "後三角飛鳥",
+    "arnold_press": "阿諾德推舉",
+    "front_raises": "前平舉",
+    "upright_row": "直立划船",
+    "shrugs": "聳肩",
+    "barbell_curls": "槓鈴彎舉",
+    "tricep_dips": "三頭撐體",
+    "hammer_curls": "錘式彎舉",
+    "tricep_pushdowns": "三頭下壓",
+    "preacher_curls": "牧師椅彎舉",
+    "close_grip_bench_press": "窄握臥推",
+    "cable_curls": "纜繩彎舉",
+    "overhead_tricep_extension": "過頭三頭伸展",
+    "plank": "平板支撐",
+    "russian_twists": "俄羅斯轉體",
+    "mountain_climbers": "登山者",
+    "crunches": "捲腹",
+    "dead_bug": "死蟲式",
+    "bicycle_crunches": "自行車捲腹",
+    "leg_raises": "抬腿",
+    "wood_chops": "伐木式",
+    "burpees": "波比跳",
+    "jump_squats": "跳躍深蹲",
+    "high_knees": "高抬腿",
+    "running": "跑步",
+    "cycling": "騎單車",
+    "jump_rope": "跳繩",
+    "rowing_machine": "划船機"
   }
 }

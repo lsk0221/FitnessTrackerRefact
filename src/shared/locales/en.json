@@ -52,6 +52,7 @@
     "noUserTemplates": "No custom templates yet. Create your first template!",
     "noPresetTemplates": "No preset templates available",
     "exercises": "exercises",
+    "estimatedTime": "Estimated Time",
     "preset": "PRESET",
     "copyTemplate": "Copy Template",
     "copyTemplateMessage": "Copy \"{{name}}\" to create your own version?",
@@ -59,7 +60,23 @@
     "deleteTemplateMessage": "Are you sure you want to delete \"{{name}}\"?",
     "templateDeleted": "Template deleted successfully",
     "deleteFailed": "Failed to delete template",
-    "loadFailed": "Failed to load templates"
+    "loadFailed": "Failed to load templates",
+    "ppl_push": {
+      "name": "Classic PPL - Push",
+      "description": "Classic push day workout focusing on chest, shoulders, and triceps"
+    },
+    "ppl_pull": {
+      "name": "Classic PPL - Pull",
+      "description": "Classic pull day workout focusing on back and biceps"
+    },
+    "ppl_legs": {
+      "name": "Classic PPL - Legs",
+      "description": "Leg day workout focusing on quads, hamstrings, and glutes"
+    },
+    "hiit_cardio": {
+      "name": "HIIT Cardio Blast",
+      "description": "High-intensity interval training for cardiovascular fitness"
+    }
   },
   "templateEditor": {
     "title": "Template Editor",
@@ -125,6 +142,8 @@
     "restTime": "Rest Time",
     "addSet": "Add Set",
     "finishExercise": "Finish Exercise",
+    "finishWorkout": "Finish Workout",
+    "finishWorkoutMessage": "Are you sure you want to finish this workout?",
     "workoutComplete": "Workout Complete!",
     "workoutCompleteMessage": "Great job! Your workout has been saved.",
     "saveFailed": "Failed to save workout"
@@ -439,6 +458,20 @@
     "month": "Month"
   },
   "muscleGroups": {
+    "Chest": "Chest",
+    "Back": "Back",
+    "Legs": "Legs",
+    "Shoulders": "Shoulders",
+    "Arms": "Arms",
+    "Core": "Core",
+    "Cardio": "Cardio",
+    "Full Body": "Full Body",
+    "Hamstrings": "Hamstrings",
+    "Calves": "Calves",
+    "Biceps": "Biceps",
+    "Triceps": "Triceps",
+    "Traps": "Traps",
+    "Quadriceps": "Quadriceps",
     "chest": "Chest",
     "shoulders": "Shoulders",
     "back": "Back",
@@ -483,5 +516,72 @@
     "syncFailed": "Sync failed",
     "saveFailed": "Save failed",
     "loadFailed": "Load failed"
+  },
+  "difficulties": {
+    "Beginner": "Beginner",
+    "Intermediate": "Intermediate",
+    "Advanced": "Advanced"
+  },
+  "categories": {
+    "Strength": "Strength",
+    "Cardio": "Cardio",
+    "Hypertrophy": "Hypertrophy",
+    "Endurance": "Endurance",
+    "Custom": "Custom"
+  },
+  "exercises": {
+    "barbell_bench_press": "Barbell Bench Press",
+    "incline_dumbbell_press": "Incline Dumbbell Press",
+    "push_ups": "Push-ups",
+    "dumbbell_flyes": "Dumbbell Flyes",
+    "cable_crossover": "Cable Crossover",
+    "decline_bench_press": "Decline Bench Press",
+    "chest_dips": "Chest Dips",
+    "deadlift": "Deadlift",
+    "pull_ups": "Pull-ups",
+    "barbell_rows": "Barbell Rows",
+    "lat_pulldowns": "Lat Pulldowns",
+    "t_bar_row": "T-Bar Row",
+    "seated_cable_row": "Seated Cable Row",
+    "one_arm_dumbbell_row": "One-arm Dumbbell Row",
+    "face_pulls": "Face Pulls",
+    "squat": "Squat",
+    "romanian_deadlift": "Romanian Deadlift",
+    "lunges": "Lunges",
+    "calf_raises": "Calf Raises",
+    "leg_press": "Leg Press",
+    "leg_curls": "Leg Curls",
+    "leg_extensions": "Leg Extensions",
+    "bulgarian_split_squats": "Bulgarian Split Squats",
+    "overhead_press": "Overhead Press",
+    "lateral_raises": "Lateral Raises",
+    "rear_delt_flyes": "Rear Delt Flyes",
+    "arnold_press": "Arnold Press",
+    "front_raises": "Front Raises",
+    "upright_row": "Upright Row",
+    "shrugs": "Shrugs",
+    "barbell_curls": "Barbell Curls",
+    "tricep_dips": "Tricep Dips",
+    "hammer_curls": "Hammer Curls",
+    "tricep_pushdowns": "Tricep Pushdowns",
+    "preacher_curls": "Preacher Curls",
+    "close_grip_bench_press": "Close-grip Bench Press",
+    "cable_curls": "Cable Curls",
+    "overhead_tricep_extension": "Overhead Tricep Extension",
+    "plank": "Plank",
+    "russian_twists": "Russian Twists",
+    "mountain_climbers": "Mountain Climbers",
+    "crunches": "Crunches",
+    "dead_bug": "Dead Bug",
+    "bicycle_crunches": "Bicycle Crunches",
+    "leg_raises": "Leg Raises",
+    "wood_chops": "Wood Chops",
+    "burpees": "Burpees",
+    "jump_squats": "Jump Squats",
+    "high_knees": "High Knees",
+    "running": "Running",
+    "cycling": "Cycling",
+    "jump_rope": "Jump Rope",
+    "rowing_machine": "Rowing Machine"
   }
 }

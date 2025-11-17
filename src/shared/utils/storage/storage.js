@@ -269,3 +269,64 @@ export const getLastExercise = async () => {
     return { muscleGroup: '', exercise: '' };
   }
 };
+
+/**
+ * Clear all user-specific data for a given user ID
+ * 清除指定用戶 ID 的所有用戶特定數據
+ * 
+ * @param {string} userId - The user ID to clear data for
+ * @returns {Promise<boolean>} Success status
+ */
+export const clearAllUserData = async (userId) => {
+  try {
+    if (!userId) {
+      console.warn('clearAllUserData called without userId');
+      return false;
+    }
+
+    // Get all keys from AsyncStorage
+    const allKeys = await AsyncStorage.getAllKeys();
+    
+    // Define patterns for user-specific keys
+    const userSpecificKeyPatterns = [
+      `workouts_${userId}`,
+      `@fitness_tracker:user_templates_${userId}`,
+      `@fitness_tracker:custom_exercises_${userId}`,
+      `target_weights_${userId}`,
+      `last_exercise_${userId}`,
+      `user_profile_${userId}`,
+    ];
+
+    // Find all keys that match user-specific patterns
+    const keysToRemove = allKeys.filter(key => {
+      // Check if key matches any user-specific pattern
+      return userSpecificKeyPatterns.some(pattern => key === pattern) ||
+             // Also check for keys that start with the pattern (for nested keys)
+             userSpecificKeyPatterns.some(pattern => key.startsWith(pattern));
+    });
+
+    // Also clear generic keys that should be reset (non-user-specific but should be cleared)
+    const genericKeysToRemove = [
+      'user_profile',
+      'lastSelections',
+      'lastExercise',
+    ];
+
+    // Combine all keys to remove
+    const allKeysToRemove = [...keysToRemove, ...genericKeysToRemove.filter(key => allKeys.includes(key))];
+
+    if (allKeysToRemove.length === 0) {
+      console.log('No user-specific data found to clear');
+      return true;
+    }
+
+    // Remove all keys in a single batch operation
+    await AsyncStorage.multiRemove(allKeysToRemove);
+    
+    console.log(`Cleared ${allKeysToRemove.length} keys for user ${userId}:`, allKeysToRemove);
+    return true;
+  } catch (error) {
+    console.error('清除用戶數據時發生錯誤:', error);
+    return false;
+  }
+};

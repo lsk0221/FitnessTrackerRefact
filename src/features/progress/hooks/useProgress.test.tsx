@@ -12,6 +12,7 @@ jest.mock('../services/progressService', () => ({
 
 jest.mock('../../workouts/services/workoutService', () => ({
   getAvailableExercises: jest.fn(),
+  getPerformedExercisesList: jest.fn(),
 }));
 
 import {
@@ -20,7 +21,7 @@ import {
   saveTargetWeight,
   loadLastExercise,
 } from '../services/progressService';
-import { getAvailableExercises } from '../../workouts/services/workoutService';
+import { getAvailableExercises, getPerformedExercisesList } from '../../workouts/services/workoutService';
 
 // Mock auth hook to avoid importing expo/env dependent modules
 jest.mock('../../auth/hooks/useAuth', () => ({
@@ -43,15 +44,49 @@ const Wrapper = ({ onReady }: { onReady?: (hook: any) => void }) => {
   return null;
 };
 
+jest.mock('../../../shared/services/data/exerciseLibraryService', () => ({
+  getMainMuscleGroup: jest.fn((group) => {
+    // Simple mapping for test
+    const map: { [key: string]: string } = {
+      'Hamstrings': 'Legs',
+      'Quadriceps': 'Legs',
+      'Calves': 'Legs',
+      'Biceps': 'Arms',
+      'Triceps': 'Arms',
+      'Traps': 'Back',
+      'Legs': 'Legs',
+      'Back': 'Back',
+      'Chest': 'Chest',
+      'Shoulders': 'Shoulders',
+      'Arms': 'Arms',
+      'Core': 'Core',
+      'Cardio': 'Cardio',
+      'Full Body': 'Full Body',
+    };
+    return map[group] || group;
+  }),
+}));
+
+jest.mock('../../../shared/contexts/CloudflareAuthContext', () => ({
+  useCloudflareAuth: () => ({ user: { id: 'test-user' } }),
+}));
+
 describe('useProgress hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getAvailableExercises as jest.Mock).mockResolvedValue({ success: true, data: ['bench_press'] });
+    (getAvailableExercises as jest.Mock).mockResolvedValue({ success: true, data: ['Bench Press'] });
+    (getPerformedExercisesList as jest.Mock).mockResolvedValue({
+      success: true,
+      data: [
+        { name: 'Bench Press', muscleGroup: 'Chest' },
+        { name: 'Squat', muscleGroup: 'Legs' },
+      ],
+    });
     (loadLastExercise as jest.Mock).mockResolvedValue({ success: true, data: { muscleGroup: '', exercise: '' } });
     (getTargetWeight as jest.Mock).mockResolvedValue({ success: true, data: 0 });
     (calculateExerciseProgress as jest.Mock).mockResolvedValue({
       success: true,
-      data: { exercise: 'bench_press', chartData: [], stats: { total: 0, maxWeight: 0, latest: 0, improvement: 0 } },
+      data: { exercise: 'Bench Press', chartData: [], stats: { total: 0, maxWeight: 0, latest: 0, improvement: 0 } },
     });
   });
 

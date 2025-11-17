@@ -104,10 +104,12 @@ export const filterWorkoutsByTimeRange = (workouts: Workout[], timeRange: TimeRa
 export const calculateExerciseProgress = async (
   exercise: string,
   timeRange: TimeRange = 'all',
-  userId?: string
+  userId?: string,
+  chartType: ChartType = 'weight'
 ): Promise<ProgressServiceResult<ExerciseProgress>> => {
   try {
-    // Get all workouts for this exercise
+    // Get all workouts for this exercise (including bodyweight exercises with weight: 0)
+    // 獲取此動作的所有訓練記錄（包括自重動作，weight: 0）
     const result = await getWorkoutsByExercise(exercise, userId);
 
     if (!result.success || !result.data) {
@@ -117,15 +119,29 @@ export const calculateExerciseProgress = async (
       };
     }
 
-    const workouts = result.data;
+    let workouts = result.data;
 
     // Filter by time range
-    const filteredWorkouts = filterWorkoutsByTimeRange(workouts, timeRange);
+    workouts = filterWorkoutsByTimeRange(workouts, timeRange);
+
+    // Conditionally filter by weight based on chartType
+    // 根據 chartType 條件性地按重量過濾
+    if (chartType === 'weight') {
+      // For weight chart, filter out bodyweight exercises (weight === 0)
+      // 對於重量圖表，過濾掉自重動作（weight === 0）
+      workouts = workouts.filter(workout => 
+        workout.weight !== undefined && 
+        !isNaN(workout.weight) && 
+        workout.weight > 0
+      );
+    }
+    // For volume chart, keep all workouts (including bodyweight exercises)
+    // 對於容量圖表，保留所有訓練記錄（包括自重動作）
 
     // Group by date and process
     const groupedByDate: { [date: string]: Workout[] } = {};
 
-    filteredWorkouts.forEach(workout => {
+    workouts.forEach(workout => {
       const dateKey = workout.date.split('T')[0]; // Only date part, ignore time
 
       if (!groupedByDate[dateKey]) {
@@ -141,7 +157,11 @@ export const calculateExerciseProgress = async (
       if (dayWorkouts.length === 1) {
         // Single record, use directly
         const workout = dayWorkouts[0];
-        const volume = workout.weight * workout.reps * workout.sets;
+        // Calculate volume: for bodyweight exercises (weight === 0), use reps * sets
+        // 計算容量：對於自重動作（weight === 0），使用 reps * sets
+        const volume = workout.weight > 0
+          ? workout.weight * workout.reps * workout.sets
+          : workout.reps * workout.sets; // For bodyweight, volume = total reps
 
         return {
           date: workout.date,
@@ -150,12 +170,18 @@ export const calculateExerciseProgress = async (
         };
       } else {
         // Multiple records, need to aggregate
-        // Weight: take maximum weight
-        const maxWeight = Math.max(...dayWorkouts.map(w => w.weight));
+        // Weight: take maximum weight (excluding 0 for bodyweight exercises)
+        // 重量：取最大重量（排除 0，用於自重動作）
+        const weights = dayWorkouts.map(w => w.weight).filter(w => w > 0);
+        const maxWeight = weights.length > 0 ? Math.max(...weights) : 0;
 
-        // Volume: sum all volumes
+        // Volume: sum all volumes (handle bodyweight exercises)
+        // 容量：求和所有容量（處理自重動作）
         const totalVolume = dayWorkouts.reduce((sum, workout) => {
-          return sum + workout.weight * workout.reps * workout.sets;
+          const workoutVolume = workout.weight > 0
+            ? workout.weight * workout.reps * workout.sets
+            : workout.reps * workout.sets; // For bodyweight, volume = total reps
+          return sum + workoutVolume;
         }, 0);
 
         return {
@@ -171,8 +197,9 @@ export const calculateExerciseProgress = async (
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    // Calculate statistics
-    const stats = calculateStats(sortedChartData, 'weight');
+    // Calculate statistics based on chartType
+    // 根據 chartType 計算統計數據
+    const stats = calculateStats(sortedChartData, chartType);
 
     return {
       success: true,
@@ -359,5 +386,6 @@ export const saveLastExercise = async (muscleGroup: string, exercise: string): P
     };
   }
 };
+
 
 
