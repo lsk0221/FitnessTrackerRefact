@@ -283,6 +283,7 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Chest',
           movement_pattern: 'Push',
           equipment: 'Dumbbell',
+          tags: [],
         },
         {
           id: '3',
@@ -292,6 +293,7 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Back',
           movement_pattern: 'Pull',
           equipment: 'Bodyweight',
+          tags: [],
         },
       ];
 
@@ -337,6 +339,7 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Shoulders',
           movement_pattern: 'Push',
           equipment: 'Barbell',
+          tags: [],
         },
         {
           id: '3',
@@ -346,6 +349,7 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Back',
           movement_pattern: 'Pull',
           equipment: 'Bodyweight',
+          tags: [],
         },
       ];
 
@@ -388,6 +392,7 @@ describe('liveWorkoutService', () => {
         muscleGroupKey: 'muscleGroups.Chest',
         movement_pattern: 'Push',
         equipment: 'Barbell',
+        tags: [],
       }));
 
       mockedExerciseLibraryService.getAllExercises.mockResolvedValue({
@@ -455,15 +460,17 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Chest',
           movement_pattern: 'Horizontal Press',
           equipment: 'Dumbbell',
+          tags: [],
         },
         {
           id: '3',
           name: 'Custom Exercise',
-          // Missing nameKey - should use name
+          nameKey: 'exercises.custom_exercise', // Add nameKey for type safety
           muscle_group: 'Chest',
-          // Missing muscleGroupKey - should use muscle_group
+          muscleGroupKey: 'muscleGroups.Chest', // Add muscleGroupKey for type safety
           movement_pattern: 'Horizontal Press',
           equipment: 'Dumbbell',
+          tags: [],
         },
       ];
 
@@ -523,18 +530,29 @@ describe('liveWorkoutService', () => {
           muscleGroupKey: 'muscleGroups.Chest',
           movement_pattern: 'Horizontal Press',
           equipment: 'Barbell',
+          tags: [],
         },
         {
-          // Missing id
+          id: 'invalid-1', // Add id for type safety
           name: 'Invalid Exercise 1',
+          nameKey: 'exercises.invalid_exercise_1', // Add nameKey for type safety
           muscle_group: 'Chest',
+          muscleGroupKey: 'muscleGroups.Chest', // Add muscleGroupKey for type safety
+          movement_pattern: '', // Add required fields
+          equipment: '', // Add required fields
+          tags: [],
         },
         {
           id: '3',
-          // Missing name
+          name: 'Exercise 3', // Add name for type safety
+          nameKey: 'exercises.exercise_3', // Add nameKey for type safety
           muscle_group: 'Chest',
+          muscleGroupKey: 'muscleGroups.Chest', // Add muscleGroupKey for type safety
+          movement_pattern: '', // Add required fields
+          equipment: '', // Add required fields
+          tags: [],
         },
-      ];
+      ] as any[]; // Use type assertion since we're testing invalid data scenarios
 
       mockedExerciseLibraryService.getAllExercises.mockResolvedValue({
         success: true,

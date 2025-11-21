@@ -876,13 +876,9 @@ describe('useLiveWorkout', () => {
       // However, the actual implementation may have a timing issue with the closure
       // So we verify the final state instead
       expect(result.current.totalExercises).toBe(0);
-      // The function should return true, but if there's a closure issue,
-      // we at least verify the workout is empty
-      if (isEmpty !== true) {
-        // If isEmpty is false but workout is empty, the function logic may need review
-        // For now, we verify the state is correct
-        console.warn('removeCurrentExercise returned false but workout is empty');
-      }
+      // Verify the function returned the correct value (should be true for single exercise removal)
+      // The isEmpty variable is set synchronously in the setWorkoutPlan callback
+      expect(isEmpty).toBe(true);
     });
   });
 });
