@@ -3,9 +3,10 @@
  * 訓練動作選擇組件 - 包含肌肉群和動作選擇
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
 import { TIME_RANGE_OPTIONS } from '../../../shared/constants';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 // Removed getExerciseName import - using t() function instead
 import type { TimeRange, ChartType } from '../types/progress.types';
 
@@ -46,9 +47,35 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
 }) => {
   const [showMuscleGroupModal, setShowMuscleGroupModal] = useState(false);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
-  const [showTimeRangeModal, setShowTimeRangeModal] = useState(false);
+  const { showPopover, renderAlert } = useAppAlert();
+  
+  // Ref for time range button
+  const timeRangeButtonRef = useRef<TouchableOpacity>(null);
 
   const styles = createStyles(theme);
+  
+  /**
+   * Handle time range selection using Popover
+   * 使用 Popover 處理時間範圍選擇
+   */
+  const handleTimeRangePress = useCallback(() => {
+    if (timeRangeButtonRef.current) {
+      timeRangeButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+        showPopover({
+          anchorRect: {
+            x: pageX,
+            y: pageY,
+            width: width || 100,
+            height: height || 40,
+          },
+          options: TIME_RANGE_OPTIONS.map((option) => ({
+            text: t(`timeRange.${option.value}`),
+            onPress: () => onTimeRangeSelect(option.value as TimeRange),
+          })),
+        });
+      });
+    }
+  }, [showPopover, t, onTimeRangeSelect]);
 
   return (
     <>
@@ -101,7 +128,11 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.timeRangeButton} onPress={() => setShowTimeRangeModal(true)}>
+        <TouchableOpacity
+          ref={timeRangeButtonRef}
+          style={styles.timeRangeButton}
+          onPress={handleTimeRangePress}
+        >
           <Text style={styles.timeRangeButtonText}>{t(`timeRange.${selectedTimeRange}`)}</Text>
         </TouchableOpacity>
       </View>
@@ -178,36 +209,7 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
         </View>
       </Modal>
 
-      {/* Time Range Modal */}
-      <Modal
-        visible={showTimeRangeModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowTimeRangeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t('progress.selectTimeRange')}</Text>
-            <ScrollView style={styles.modalScrollView}>
-              {TIME_RANGE_OPTIONS.map(option => (
-                <TouchableOpacity
-                  key={option.value}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    onTimeRangeSelect(option.value as TimeRange);
-                    setShowTimeRangeModal(false);
-                  }}
-                >
-                  <Text style={styles.modalOptionText}>{t(`timeRange.${option.value}`)}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setShowTimeRangeModal(false)}>
-              <Text style={styles.closeButtonText}>{t('common.close')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {renderAlert()}
     </>
   );
 };
@@ -276,6 +278,8 @@ const createStyles = (theme: any) =>
       paddingHorizontal: 12,
       paddingVertical: 8,
       marginLeft: 'auto',
+      minWidth: 100, // Fixed minimum width to prevent text length from affecting button size
+      width: 100, // Fixed width to ensure consistent button size
     },
     timeRangeButtonText: {
       fontSize: 14,

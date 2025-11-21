@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+// @ts-ignore - Expo vector icons types
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
 import type { TimerState } from '../types/liveWorkout.types';
@@ -57,9 +59,11 @@ const RestTimer: React.FC<RestTimerProps> = ({
         <TouchableOpacity
           style={styles.skipButton}
           onPress={onSkip}
+          activeOpacity={0.8}
         >
+          <MaterialCommunityIcons name="close-circle" size={24} color="#FFFFFF" />
           <Text style={styles.skipButtonText}>
-            {t('liveMode.skipRest')}
+            {t('liveMode.skipRest') || 'Skip'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -109,15 +113,32 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: '#fff',
   },
   skipButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.primaryColor,
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    minWidth: 160,
+    gap: 8,
+    // Enhanced visibility
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   skipButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 });
 

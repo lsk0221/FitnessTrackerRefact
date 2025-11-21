@@ -19,6 +19,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Exercise, EQUIPMENT_TYPES } from '../../../shared/services/data/exerciseLibraryService';
 
 interface ExerciseSelectorProps {
@@ -55,6 +56,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   theme,
 }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   // State for multi-select
@@ -159,6 +161,18 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   const renderExerciseItem = ({ item }: { item: Exercise }) => {
     const isSelected = isExerciseSelected(item);
     
+    // Get display name - use translation key if available, fallback to name
+    // 獲取顯示名稱 - 優先使用翻譯鍵，否則使用名稱
+    const displayName = item.nameKey 
+      ? t(item.nameKey) 
+      : (item.name || 'Unknown Exercise');
+    
+    // Get muscle group display name
+    // 獲取肌肉群顯示名稱
+    const displayMuscleGroup = item.muscleGroupKey
+      ? t(item.muscleGroupKey)
+      : (item.muscle_group || 'Unknown');
+    
     return (
       <TouchableOpacity
         style={[
@@ -171,7 +185,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
         <View style={styles.exerciseItemContent}>
           <View style={styles.exerciseNameRow}>
             <Text style={[styles.exerciseName, isSelected && styles.exerciseNameSelected]}>
-              {item.name}
+              {displayName}
             </Text>
             {item.isCustom && (
               <View style={styles.customBadge}>
@@ -181,7 +195,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           </View>
           <View style={styles.exerciseDetails}>
             <View style={styles.detailBadge}>
-              <Text style={styles.detailText}>{item.muscle_group}</Text>
+              <Text style={styles.detailText}>{displayMuscleGroup}</Text>
             </View>
             <View style={styles.detailBadge}>
               <Text style={styles.detailText}>{item.equipment}</Text>
@@ -235,7 +249,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
     >
       <View style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
           <Text style={styles.title}>{t('templateEditor.addExercise')}</Text>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>✕</Text>
@@ -454,7 +468,7 @@ const createStyles = (theme: any) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 20,
-      paddingTop: 60,
+      // paddingTop is set dynamically using insets.top in component
       paddingBottom: 20,
       backgroundColor: theme.cardBackground,
       borderBottomWidth: 1,

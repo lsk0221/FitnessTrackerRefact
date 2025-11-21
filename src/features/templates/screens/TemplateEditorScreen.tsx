@@ -7,10 +7,12 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import { useTemplateEditor } from '../hooks/useTemplateEditor';
 import { WorkoutTemplate, EditorMode } from '../types/template.types';
 import TemplateEditorForm from '../components/TemplateEditorForm';
@@ -34,6 +36,7 @@ type TemplateEditorScreenRouteProp = RouteProp<RootStackParamList, 'TemplateEdit
 const TemplateEditorScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { showConfirmation, showAlert: showAppAlert, renderAlert } = useAppAlert();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<TemplateEditorScreenRouteProp>();
   const styles = createStyles(theme);
@@ -77,11 +80,24 @@ const TemplateEditorScreen: React.FC = () => {
 
     // Change detection
     hasUnsavedChanges,
-  } = useTemplateEditor({
+  } = useTemplateEditor(
+    {
     mode,
     templateId: template?.id,
     initialTemplate: template,
-  });
+    },
+    {
+      showAlert: (title: string, message: string) => {
+        showAppAlert({ title, message });
+      },
+      showSuccess: (message: string) => {
+        showAppAlert({
+          title: t('common.success'),
+          message,
+        });
+      },
+    }
+  );
 
   /**
    * Get screen title based on mode
@@ -116,18 +132,14 @@ const TemplateEditorScreen: React.FC = () => {
   const handleBackPress = () => {
     // Check if there are actual unsaved changes
     if (hasUnsavedChanges()) {
-      Alert.alert(
-        t('templateEditor.unsavedChanges'),
-        t('templateEditor.unsavedChangesMessage'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('common.discard'),
-            style: 'destructive',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      showConfirmation({
+        title: t('templateEditor.unsavedChanges'),
+        message: t('templateEditor.unsavedChangesMessage'),
+        confirmText: t('common.discard'),
+        cancelText: t('common.cancel'),
+        confirmStyle: 'destructive',
+        onConfirm: () => navigation.goBack(),
+      });
     } else {
       // No changes, go back directly
       navigation.goBack();
@@ -159,23 +171,24 @@ const TemplateEditorScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Text style={styles.backButtonText}>← {t('common.back')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>{getTitle()}</Text>
+      <ScreenHeader
+        title={getTitle()}
+        onBack={handleBackPress}
+        rightComponent={
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleSaveTemplate}
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={theme.primaryColor} />
           ) : (
             <Text style={styles.saveButtonText}>{t('common.save')}</Text>
           )}
         </TouchableOpacity>
-      </View>
+        }
+        paddingTopOffset={20}
+      />
 
       {/* Form */}
       <View style={styles.content}>
@@ -210,6 +223,7 @@ const TemplateEditorScreen: React.FC = () => {
           muscleGroupsList={muscleGroupsList}
           theme={theme}
         />
+      {renderAlert()}
     </View>
   );
 };
@@ -232,26 +246,6 @@ const createStyles = (theme: any) =>
       marginTop: 12,
       fontSize: 16,
       color: theme.textSecondary,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 60,
-      paddingBottom: 16,
-      backgroundColor: theme.cardBackground,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderColor,
-    },
-    backButton: {
-      padding: 4,
-      minWidth: 60,
-    },
-    backButtonText: {
-      fontSize: 16,
-      color: theme.primaryColor,
-      fontWeight: '600',
     },
     title: {
       fontSize: 18,

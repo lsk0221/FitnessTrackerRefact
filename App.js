@@ -14,6 +14,7 @@
  */
 
 import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './src/shared/contexts/ThemeContext';
 import { CloudflareAuthProvider } from './src/shared/contexts/CloudflareAuthContext';
 import { loadSavedLanguage } from './src/shared/i18n';
@@ -31,11 +32,13 @@ export default function App() {
   }, []);
 
   return (
+    <SafeAreaProvider>
     <ThemeProvider>
       <CloudflareAuthProvider>
         <AppNavigator />
       </CloudflareAuthProvider>
     </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

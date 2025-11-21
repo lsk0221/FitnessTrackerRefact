@@ -6,6 +6,7 @@
     "save": "保存",
     "edit": "編輯",
     "delete": "刪除",
+    "remove": "移除",
     "close": "關閉",
     "back": "返回",
     "discard": "放棄",
@@ -13,7 +14,9 @@
     "error": "錯誤",
     "success": "成功",
     "warning": "警告",
-    "info": "信息"
+    "info": "信息",
+    "ok": "確定",
+    "finish": "完成"
   },
   "navigation": {
     "workout": "記錄訓練",
@@ -46,6 +49,7 @@
   },
   "templates": {
     "title": "訓練範本",
+    "subtitle": "管理您的訓練範本",
     "myTemplates": "我的範本",
     "explorePresets": "探索預設",
     "createNew": "創建新範本",
@@ -141,16 +145,46 @@
   "liveMode": {
     "title": "即時模式",
     "skip": "跳過",
+    "skipRest": "跳過",
     "skipExercise": "跳過動作",
     "skipExerciseMessage": "確定要跳過此動作嗎？",
     "restTime": "休息時間",
+    "rest": "休息",
     "addSet": "添加組數",
     "finishExercise": "完成動作",
     "finishWorkout": "完成訓練",
     "finishWorkoutMessage": "您確定要完成本次訓練嗎？",
     "workoutComplete": "訓練完成！",
     "workoutCompleteMessage": "太棒了！您的訓練已保存。",
-    "saveFailed": "保存訓練失敗"
+    "saveFailed": "保存訓練失敗",
+    "noSetsCompleted": "未完成組數",
+    "noSetsCompletedMessage": "請至少完成一組訓練",
+    "addExercise": "新增練習",
+    "removeExercise": "移除練習",
+    "removeExerciseConfirm": "確定要移除此練習嗎？",
+    "selectAction": "請選擇操作",
+    "moreOptions": "更多選項",
+    "smartSwap": "智能替換",
+    "swapExercise": "替換練習",
+    "suggestions": "建議",
+    "searchExercises": "搜尋練習",
+    "searchHint": "輸入以搜尋練習...",
+    "noSearchResults": "未找到練習",
+    "exerciseAdded": "練習已添加",
+    "exerciseAddedMessage": "練習已添加到您的訓練中",
+    "workoutEmpty": "訓練為空",
+    "workoutEmptyMessage": "所有練習已被移除",
+    "thisExercise": "此練習",
+    "unknownExercise": "未知練習",
+    "unknown": "未知",
+    "set": "組",
+    "reps": "次數",
+    "weight": "重量",
+    "done": "完成",
+    "editWeight": "編輯重量",
+    "liveMode": "即時模式",
+    "noExercises": "沒有練習",
+    "addExerciseToStart": "添加練習以開始訓練"
   },
   "quickLog": {
     "title": "快速記錄",
@@ -161,7 +195,9 @@
     "addSet": "添加組數",
     "success": "成功",
     "workoutSaved": "訓練保存成功",
-    "saveFailed": "保存訓練失敗"
+    "savedMessage": "已保存 {{count}} 條訓練記錄",
+    "saveFailed": "保存訓練失敗",
+    "exerciseAlreadyExists": "此練習已存在於列表中"
   },
   "progress": {
     "title": "查看進度",
@@ -380,7 +416,7 @@
     "title": "快速記錄",
     "subtitle": "快速批量記錄您的訓練數據",
     "success": "保存成功",
-    "savedMessage": "已保存 {count} 條訓練記錄",
+    "savedMessage": "已保存 {{count}} 條訓練記錄",
     "noData": "沒有數據",
     "noDataMessage": "請先完成一些練習並標記為完成",
     "saveFailed": "保存失敗，請重試",
@@ -392,7 +428,8 @@
     "lastRecord": "上次記錄",
     "reps": "次數",
     "weight": "重量",
-    "complete": "完成"
+    "complete": "完成",
+    "savedMessage": "已保存 {{count}} 條訓練記錄"
   },
   "errors": {
     "networkError": "網絡連接錯誤",

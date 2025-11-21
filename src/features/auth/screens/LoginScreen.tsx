@@ -13,14 +13,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   TouchableOpacity,
   Text
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { LoginForm } from '../components/LoginForm';
-import CustomAlert from '../../../shared/components/navigation/CustomAlert';
 
 interface LoginScreenProps {
   navigation: any;
@@ -33,14 +32,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  
-  // Custom alert state
-  const [customAlert, setCustomAlert] = useState({
-    visible: false,
-    title: '',
-    message: '',
-    buttons: []
-  });
 
   // Auth hook
   const {
@@ -52,35 +43,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
     clearError
   } = useCloudflareAuth();
 
-  // Show custom alert
-  const showCustomAlert = (title: string, message: string, buttons: any[]) => {
-    setCustomAlert({
-      visible: true,
-      title,
-      message,
-      buttons
-    });
-  };
-
-  // Hide custom alert
-  const hideCustomAlert = () => {
-    setCustomAlert({
-      visible: false,
-      title: '',
-      message: '',
-      buttons: []
-    });
-  };
+  // App Alert hook
+  const { showAlert, showConfirmation, showOptions, renderAlert } = useAppAlert();
 
   // Handle email authentication
   const handleEmailAuth = async () => {
     if (!email || !password) {
-      Alert.alert('錯誤', '請填寫所有欄位');
+      showAlert({
+        title: '錯誤',
+        message: '請填寫所有欄位',
+      });
       return;
     }
 
     if (isSignUp && !displayName) {
-      Alert.alert('錯誤', '請填寫姓名');
+      showAlert({
+        title: '錯誤',
+        message: '請填寫姓名',
+      });
       return;
     }
 
@@ -99,79 +79,49 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
     } catch (error) {
       // Handle specific error cases
       if (error.message.includes('該郵箱已被註冊')) {
-        showCustomAlert(
-          '帳號已存在', 
-          '該郵箱已經註冊過了，請切換到登入模式或使用其他郵箱註冊。',
-          [
+        showOptions({
+          title: '帳號已存在',
+          options: [
             { 
               text: '切換到登入', 
-              onPress: () => {
-                hideCustomAlert();
-                setIsSignUp(false);
-              },
-              style: 'default'
+              onPress: () => setIsSignUp(false),
             },
-            { 
-              text: '取消', 
-              onPress: hideCustomAlert,
-              style: 'cancel'
-            }
-          ]
-        );
+          ],
+          cancelText: '取消',
+        });
       } else if (error.message.includes('登入失敗') || error.message.includes('帳號或密碼不正確')) {
         // 提供使用本地模式的選項
-        showCustomAlert(
-          '登入失敗', 
-          error.message,
-          [
+        showOptions({
+          title: '登入失敗',
+          options: [
             { 
               text: '使用本地模式', 
-              onPress: () => {
-                hideCustomAlert();
-                handleLocalMode();
-              },
-              style: 'default'
+              onPress: () => handleLocalMode(),
             },
             {
               text: '切換到註冊',
-              onPress: () => {
-                hideCustomAlert();
-                setIsSignUp(true);
-              },
-              style: 'default'
+              onPress: () => setIsSignUp(true),
             },
-            { 
-              text: '重試', 
-              onPress: hideCustomAlert,
-              style: 'cancel'
-            }
-          ]
-        );
+          ],
+          cancelText: '重試',
+        });
       } else if (error.message.includes('無法連接') || error.message.includes('服務器錯誤')) {
         // 網絡或服務器錯誤，建議使用本地模式
-        showCustomAlert(
-          '連接失敗', 
-          error.message,
-          [
+        showOptions({
+          title: '連接失敗',
+          options: [
             { 
               text: '使用本地模式', 
-              onPress: () => {
-                hideCustomAlert();
-                handleLocalMode();
-              },
-              style: 'default'
+              onPress: () => handleLocalMode(),
             },
-            { 
-              text: '重試', 
-              onPress: hideCustomAlert,
-              style: 'cancel'
-            }
-          ]
-        );
+          ],
+          cancelText: '重試',
+        });
       } else {
-        showCustomAlert('錯誤', error.message || '操作失敗', [
-          { text: '確定', onPress: hideCustomAlert }
-        ]);
+        showAlert({
+          title: '錯誤',
+          message: error.message || '操作失敗',
+        });
       }
     }
   };
@@ -183,9 +133,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
       // 成功進入本地模式會自動導航到主應用程式
       console.log('成功進入本地模式');
     } catch (error) {
-      showCustomAlert('錯誤', '進入本地模式失敗', [
-        { text: '確定', onPress: hideCustomAlert }
-      ]);
+      showAlert({
+        title: '錯誤',
+        message: '進入本地模式失敗',
+      });
     }
   };
 
@@ -199,10 +150,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
   const handleClearStorage = async () => {
     try {
       await AsyncStorage.clear();
-      Alert.alert('成功', '已清除所有本地數據，請重新啟動應用');
+      showAlert({
+        title: '成功',
+        message: '已清除所有本地數據，請重新啟動應用',
+      });
       console.log('✅ AsyncStorage cleared successfully');
     } catch (error) {
-      Alert.alert('錯誤', '清除數據失敗');
+      showAlert({
+        title: '錯誤',
+        message: '清除數據失敗',
+      });
       console.error('Failed to clear AsyncStorage:', error);
     }
   };
@@ -242,16 +199,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
           </TouchableOpacity>
         </View>
       </ScrollView>
-      
-      {/* Custom Alert */}
-      <CustomAlert
-        visible={customAlert.visible}
-        title={customAlert.title}
-        message={customAlert.message}
-        buttons={customAlert.buttons}
-        theme={theme}
-        onClose={hideCustomAlert}
-      />
+      {renderAlert()}
     </KeyboardAvoidingView>
   );
 };

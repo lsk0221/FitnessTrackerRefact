@@ -12,11 +12,11 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
 import { clearAllUserData } from '../../../shared/utils/storage/storage';
 
@@ -28,6 +28,7 @@ export const SettingsScreen: React.FC = () => {
   const { theme } = useTheme();
   const { user, logout } = useCloudflareAuth();
   const { t } = useTranslation();
+  const { showConfirmation, showAlert, renderAlert } = useAppAlert();
   const styles = createStyles(theme);
 
   /**
@@ -35,24 +36,19 @@ export const SettingsScreen: React.FC = () => {
    * 處理清除所有數據按鈕點擊
    */
   const handleClearAllData = () => {
-    Alert.alert(
-      t('settings.clearDataTitle') || 'Clear All Data',
-      t('settings.clearDataMessage') || 'Are you sure you want to delete all local data? This action cannot be undone.',
-      [
-        {
-          text: t('common.cancel') || 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: t('settings.clearDataConfirm') || 'Delete',
-          style: 'destructive',
-          onPress: async () => {
+    showConfirmation({
+      title: t('settings.clearDataTitle') || 'Clear All Data',
+      message: t('settings.clearDataMessage') || 'Are you sure you want to delete all local data? This action cannot be undone.',
+      confirmText: t('settings.clearDataConfirm') || 'Delete',
+      cancelText: t('common.cancel') || 'Cancel',
+      confirmStyle: 'destructive',
+      onConfirm: async () => {
             try {
               if (!user?.id) {
-                Alert.alert(
-                  t('common.error') || 'Error',
-                  t('settings.noUserError') || 'No user ID found. Cannot clear data.'
-                );
+            showAlert({
+              title: t('common.error') || 'Error',
+              message: t('settings.noUserError') || 'No user ID found. Cannot clear data.',
+            });
                 return;
               }
 
@@ -62,28 +58,25 @@ export const SettingsScreen: React.FC = () => {
               if (success) {
                 // Logout after clearing data
                 await logout();
-                Alert.alert(
-                  t('settings.clearDataSuccess') || 'Success',
-                  t('settings.clearDataSuccessMessage') || 'All data has been cleared. You have been logged out.'
-                );
+            showAlert({
+              title: t('settings.clearDataSuccess') || 'Success',
+              message: t('settings.clearDataSuccessMessage') || 'All data has been cleared. You have been logged out.',
+            });
               } else {
-                Alert.alert(
-                  t('common.error') || 'Error',
-                  t('settings.clearDataError') || 'Failed to clear all data. Please try again.'
-                );
+            showAlert({
+              title: t('common.error') || 'Error',
+              message: t('settings.clearDataError') || 'Failed to clear all data. Please try again.',
+            });
               }
             } catch (error) {
               console.error('Error clearing user data:', error);
-              Alert.alert(
-                t('common.error') || 'Error',
-                t('settings.clearDataError') || 'Failed to clear all data. Please try again.'
-              );
+          showAlert({
+            title: t('common.error') || 'Error',
+            message: t('settings.clearDataError') || 'Failed to clear all data. Please try again.',
+          });
             }
           },
-        },
-      ],
-      { cancelable: true }
-    );
+    });
   };
 
   return (
@@ -135,6 +128,7 @@ export const SettingsScreen: React.FC = () => {
           )}
         </View>
       )}
+      {renderAlert()}
     </ScrollView>
   );
 };

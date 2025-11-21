@@ -4,13 +4,29 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import * as workoutService from '../services/workoutService';
 import { getMuscleGroups, getMainMuscleGroup } from '../../../shared/services/data/exerciseLibraryService';
 import type { Workout, WorkoutDataByDate } from '../types/workout.types';
 import { useCloudflareAuth } from '../../../shared/contexts/CloudflareAuthContext';
+
+/**
+ * Alert callbacks interface
+ * 提示框回調介面
+ */
+export interface UseWorkoutHistoryCallbacks {
+  showAlert?: (title: string, message: string) => void;
+  showConfirmation?: (options: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmStyle?: 'default' | 'destructive';
+    onConfirm: () => void;
+  }) => void;
+  showSuccess?: (message: string) => void;
+}
 
 /**
  * 編輯表單狀態
@@ -70,13 +86,50 @@ export interface UseWorkoutHistoryReturn {
 
 /**
  * useWorkoutHistory Hook
+ * @param callbacks - Optional callbacks for showing alerts
  * @returns Hook return values
  */
-export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
+export const useWorkoutHistory = (callbacks?: UseWorkoutHistoryCallbacks): UseWorkoutHistoryReturn => {
   const { t } = useTranslation();
   // Get current user for data isolation
   const { user } = useCloudflareAuth();
   const userId = user?.id;
+  
+  // Extract callbacks with defaults
+  const showAlert = callbacks?.showAlert || ((title: string, message: string) => {
+    console.warn('Alert not handled:', title, message);
+  });
+  const showConfirmation = callbacks?.showConfirmation || ((options: any) => {
+    console.warn('Confirmation not handled:', options.title);
+    options.onConfirm();
+  });
+  const showSuccess = callbacks?.showSuccess || ((message: string) => {
+    console.log('Success:', message);
+  });
+  
+  /**
+   * Helper function to close all modals and show alert
+   * 輔助函數：關閉所有模態框並顯示提示
+   */
+  const closeModalsAndShowAlert = useCallback((title: string, message: string, delay: number = 100) => {
+    setShowDetailModal(false);
+    setShowEditModal(false);
+    setTimeout(() => {
+      showAlert(title, message);
+    }, delay);
+  }, [showAlert, setShowDetailModal, setShowEditModal]);
+  
+  /**
+   * Helper function to close all modals and show success
+   * 輔助函數：關閉所有模態框並顯示成功消息
+   */
+  const closeModalsAndShowSuccess = useCallback((message: string, delay: number = 200) => {
+    setShowDetailModal(false);
+    setShowEditModal(false);
+    setTimeout(() => {
+      showSuccess(message);
+    }, delay);
+  }, [showSuccess, setShowDetailModal, setShowEditModal]);
   
   // Data state
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -115,11 +168,11 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
         setWorkouts(result.data);
       } else {
         console.error('載入訓練記錄失敗:', result.error);
-        Alert.alert(t('common.error'), result.error || t('calendar.loadFailed'));
+        closeModalsAndShowAlert(t('common.error'), result.error || t('calendar.loadFailed'));
       }
     } catch (error) {
       console.error('載入訓練記錄異常:', error);
-      Alert.alert(t('common.error'), t('calendar.loadFailed'));
+      closeModalsAndShowAlert(t('common.error'), t('calendar.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -235,7 +288,7 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
    */
   const handleAddWorkout = useCallback(() => {
     if (!selectedDate) {
-      Alert.alert(t('common.error'), t('calendar.selectDateFirst'));
+      closeModalsAndShowAlert(t('common.error'), t('calendar.selectDateFirst'));
       return;
     }
     
@@ -264,7 +317,7 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
     setTimeout(() => {
       setShowEditModal(true);
     }, 200);
-  }, [selectedDate, t]);
+  }, [selectedDate, t, closeModalsAndShowAlert, setShowDetailModal, setEditForm, setEditingWorkout, setShowEditModal]);
 
   /**
    * 處理編輯訓練記錄
@@ -272,7 +325,7 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
    */
   const handleEditWorkout = useCallback((workout: Workout) => {
     if (!workout || !workout.id) {
-      Alert.alert(t('common.error'), t('calendar.cannotEditWorkout'));
+      closeModalsAndShowAlert(t('common.error'), t('calendar.cannotEditWorkout'));
       return;
     }
     
@@ -292,7 +345,7 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
     setTimeout(() => {
       setShowEditModal(true);
     }, 200);
-  }, [t]);
+  }, [t, closeModalsAndShowAlert, setShowDetailModal, setEditingWorkout, setEditForm, setShowEditModal]);
 
   /**
    * 處理刪除訓練記錄
@@ -300,36 +353,42 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
    */
   const handleDeleteWorkout = useCallback((workout: Workout) => {
     if (!workout || !workout.id) {
-      Alert.alert(t('common.error'), t('calendar.cannotDeleteWorkout'));
+      closeModalsAndShowAlert(t('common.error'), t('calendar.cannotDeleteWorkout'));
       return;
     }
     
-    Alert.alert(
-      t('calendar.confirmDelete'),
-      t('calendar.confirmDeleteMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
+    // Close detail modal first to ensure confirmation dialog is visible
+    // 先關閉詳情模態框，確保確認對話框可見
+    setShowDetailModal(false);
+    
+    // Show confirmation after a short delay to ensure modal is closed
+    // 短暫延遲後顯示確認對話框，確保模態框已關閉
+    setTimeout(() => {
+      showConfirmation({
+        title: t('calendar.confirmDelete'),
+        message: t('calendar.confirmDeleteMessage'),
+        confirmText: t('common.delete'),
+        cancelText: t('common.cancel'),
+        confirmStyle: 'destructive',
+        onConfirm: async () => {
             const result = await workoutService.deleteWorkout(workout.id, userId);
             
             if (result.success) {
-              Alert.alert(t('common.success'), t('calendar.workoutDeleted'));
               // Reload workouts
               await loadWorkouts();
               // Update selected workouts list
               const updatedWorkouts = selectedWorkouts.filter(w => w.id !== workout.id);
               setSelectedWorkouts(updatedWorkouts);
+          
+          // Show success message after modal is closed
+          closeModalsAndShowSuccess(t('calendar.workoutDeleted'), 200);
             } else {
-              Alert.alert(t('common.error'), result.error || t('calendar.deleteFailed'));
+          closeModalsAndShowAlert(t('common.error'), result.error || t('calendar.deleteFailed'), 200);
             }
-          }
-        }
-      ]
-    );
-  }, [userId, t, loadWorkouts, selectedWorkouts]);
+      },
+      });
+    }, 100);
+  }, [userId, t, loadWorkouts, selectedWorkouts, showConfirmation, closeModalsAndShowAlert, closeModalsAndShowSuccess, setShowDetailModal]);
 
   /**
    * 處理保存編輯
@@ -337,13 +396,13 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
    */
   const handleSaveEdit = useCallback(async () => {
     if (!editingWorkout) {
-      Alert.alert(t('common.error'), t('calendar.invalidWorkout'));
+      closeModalsAndShowAlert(t('common.error'), t('calendar.invalidWorkout'));
       return;
     }
     
     // Validate form inputs
     if (!editForm.muscleGroup || !editForm.exercise || !editForm.sets || !editForm.reps || !editForm.weight) {
-      Alert.alert(t('common.error'), t('workout.fillAllFields'));
+      closeModalsAndShowAlert(t('common.error'), t('workout.fillAllFields'));
       return;
     }
 
@@ -370,27 +429,25 @@ export const useWorkoutHistory = (): UseWorkoutHistoryReturn => {
       }
 
       if (result.success) {
-        Alert.alert(
-          t('common.success'), 
-          editingWorkout.id ? t('calendar.workoutUpdated') : t('calendar.workoutAdded')
-        );
-        
+        // Close edit modal first
         setShowEditModal(false);
         setEditingWorkout(null);
         
         // Reload workouts to update UI
         await loadWorkouts();
+        
+        // Show success message after modal is closed
+        const successMessage = editingWorkout.id ? t('calendar.workoutUpdated') : t('calendar.workoutAdded');
+        closeModalsAndShowSuccess(successMessage, 200);
       } else {
-        Alert.alert(t('common.error'), result.error || t('calendar.saveFailed'));
+        closeModalsAndShowAlert(t('common.error'), result.error || t('calendar.saveFailed'));
       }
     } catch (error) {
       console.error('保存訓練記錄錯誤:', error);
-      Alert.alert(
-        t('common.error'), 
-        t('calendar.saveFailedWithError') + ': ' + (error instanceof Error ? error.message : 'Unknown error')
-      );
+      const errorMessage = t('calendar.saveFailedWithError') + ': ' + (error instanceof Error ? error.message : 'Unknown error');
+      closeModalsAndShowAlert(t('common.error'), errorMessage);
     }
-  }, [editingWorkout, editForm, userId, t, loadWorkouts]);
+  }, [editingWorkout, editForm, userId, t, loadWorkouts, closeModalsAndShowAlert, closeModalsAndShowSuccess, setShowEditModal, setEditingWorkout]);
 
   /**
    * 關閉編輯模態框

@@ -18,9 +18,8 @@ import { WorkoutIcon, ProgressIcon, ProfileIcon, SettingsIcon, HistoryIcon } fro
 import { useTheme } from '../../shared/contexts/ThemeContext'; // 主題上下文
 import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext'; // 認證上下文
 
-// Screen imports (temporary placeholders - will be replaced with actual features)
-// 畫面導入（臨時佔位符 - 將被實際功能取代）
-import { QuickLogScreenPlaceholder } from '../../screens/placeholders/QuickLogScreenPlaceholder';
+// Profile Screen (placeholder - will be refactored to features/profile)
+// 個人資料畫面（佔位符 - 將重構到 features/profile）
 import { ProfileScreenPlaceholder } from '../../screens/placeholders/ProfileScreenPlaceholder';
 
 // Real Feature Screens - 真實功能畫面
@@ -33,6 +32,7 @@ import { TemplatesScreen, TemplateEditorScreen } from '../../features/templates'
 import ProgressChartScreen from '../../features/progress/screens/ProgressChartScreen';
 import WorkoutLobbyScreen from '../../features/live-workout/screens/WorkoutLobbyScreen';
 import LiveModeScreen from '../../features/live-workout/screens/LiveModeScreen';
+import { QuickLogScreen } from '../../features/quick-log';
 
 // Create navigators - 創建導航器
 const Tab = createBottomTabNavigator(); // 底部標籤導航器
@@ -55,7 +55,7 @@ const WorkoutStack = () => {
       <Stack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
       <Stack.Screen name="WorkoutLobby" component={WorkoutLobbyScreen} />
       <Stack.Screen name="LiveWorkout" component={LiveModeScreen} />
-      <Stack.Screen name="QuickLogWorkout" component={QuickLogScreenPlaceholder} />
+      <Stack.Screen name="QuickLogWorkout" component={QuickLogScreen} />
     </Stack.Navigator>
   );
 };

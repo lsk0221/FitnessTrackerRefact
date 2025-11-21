@@ -13,12 +13,13 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   FlatList,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../../shared/i18n';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 // Removed getExerciseName import - using t() function instead
 import { getExercisesForMuscleGroup, searchExercisesForWorkout } from '../services/liveWorkoutService';
 import type { ExerciseEntry } from '../types/liveWorkout.types';
@@ -43,12 +44,14 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { showConfirmation, showAlert, renderAlert } = useAppAlert();
   const styles = createStyles(theme);
 
   const { template } = route.params || {};
   const [sessionExercises, setSessionExercises] = useState<ExerciseEntry[]>([]);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
   const [availableExercises, setAvailableExercises] = useState<ExerciseEntry[]>([]);
+  const [defaultRestTime, setDefaultRestTime] = useState(90); // Default 90 seconds
 
   // Initialize exercises from template
   useEffect(() => {
@@ -74,8 +77,8 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
           muscleGroupKey: ex.muscleGroupKey,
           // Extract raw English strings for database storage
           // 提取原始英文字符串用於數據庫存儲
-          // If nameKey exists, extract the English name from it, otherwise use exercise/name
-          // 如果 nameKey 存在，從中提取英文名稱，否則使用 exercise/name
+          // If nameKey exists, extract the English name from it, otherwise use exercise
+          // 如果 nameKey 存在，從中提取英文名稱，否則使用 exercise
           exercise: ex.nameKey ? (() => {
             // Try to get English name from translation key
             // 嘗試從翻譯鍵獲取英文名稱
@@ -83,11 +86,11 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
             // Convert snake_case back to readable format (approximate)
             // 將 snake_case 轉換回可讀格式（近似）
             return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-          })() : (ex.exercise || ex.name || ''),
+          })() : (ex.exercise || ''),
           name: ex.nameKey ? (() => {
             const key = ex.nameKey.replace('exercises.', '');
             return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-          })() : (ex.exercise || ex.name || ''),
+          })() : (ex.exercise || ''),
           muscleGroup: ex.muscleGroupKey ? ex.muscleGroupKey.replace('muscleGroups.', '') : (ex.muscleGroup || 'Unknown'),
           movementPattern: ex.movementPattern,
           equipment: ex.equipment,
@@ -107,21 +110,17 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
    * 從會話中移除動作
    */
   const handleRemoveExercise = (index: number) => {
-    Alert.alert(
-      t('workoutLobby.removeExercise'),
-      t('workoutLobby.removeExerciseMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.remove'),
-          style: 'destructive',
-          onPress: () => {
+    showConfirmation({
+      title: t('workoutLobby.removeExercise'),
+      message: t('workoutLobby.removeExerciseMessage'),
+      confirmText: t('common.remove'),
+      cancelText: t('common.cancel'),
+      confirmStyle: 'destructive',
+      onConfirm: () => {
             const newExercises = sessionExercises.filter((_, i) => i !== index);
             setSessionExercises(newExercises);
           },
-        },
-      ]
-    );
+    });
   };
 
   /**
@@ -157,21 +156,35 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
   };
 
   /**
+   * Adjust rest time
+   * 調整休息時間
+   */
+  const adjustRestTime = (delta: number) => {
+    const newTime = defaultRestTime + delta;
+    // Clamp between 30 and 300 seconds (5 minutes)
+    // 限制在 30 到 300 秒之間（5 分鐘）
+    if (newTime >= 30 && newTime <= 300) {
+      setDefaultRestTime(newTime);
+    }
+  };
+
+  /**
    * Start live mode
    * 開始即時模式
    */
   const handleStartLiveMode = () => {
     if (sessionExercises.length === 0) {
-      Alert.alert(
-        t('workoutLobby.noExercises'),
-        t('workoutLobby.noExercisesMessage')
-      );
+      showAlert({
+        title: t('workoutLobby.noExercises'),
+        message: t('workoutLobby.noExercisesMessage'),
+      });
       return;
     }
 
     navigation.navigate('LiveWorkout', {
       exercises: sessionExercises,
       templateId: template?.id,
+      initialRestTime: defaultRestTime,
     });
   };
 
@@ -181,10 +194,10 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
    */
   const handleStartQuickLog = () => {
     if (sessionExercises.length === 0) {
-      Alert.alert(
-        t('workoutLobby.noExercises'),
-        t('workoutLobby.noExercisesMessage')
-      );
+      showAlert({
+        title: t('workoutLobby.noExercises'),
+        message: t('workoutLobby.noExercisesMessage'),
+      });
       return;
     }
 
@@ -238,18 +251,11 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          {template?.name || t('workoutLobby.title')}
-        </Text>
-        <View style={{ width: 50 }} />
-      </View>
+      <ScreenHeader
+        title={template?.name || t('workoutLobby.title') || 'Workout Lobby'}
+        onBack={() => navigation.goBack()}
+        paddingTopOffset={20}
+      />
       <Text style={styles.subtitle}>{t('workoutLobby.subtitle')}</Text>
 
       {/* Content */}
@@ -275,6 +281,36 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
             </View>
           )}
         />
+      </View>
+
+      {/* Rest Time Setting */}
+      <View style={styles.restTimeContainer}>
+        <Text style={styles.restTimeLabel}>Rest Timer: {defaultRestTime}s</Text>
+        <View style={styles.restTimeControls}>
+          <TouchableOpacity
+            style={styles.restTimeButton}
+            onPress={() => adjustRestTime(-30)}
+            disabled={defaultRestTime <= 30}
+          >
+            <Text style={[
+              styles.restTimeButtonText,
+              defaultRestTime <= 30 && styles.restTimeButtonTextDisabled
+            ]}>−</Text>
+          </TouchableOpacity>
+          <View style={styles.restTimeValueContainer}>
+            <Text style={styles.restTimeValue}>{defaultRestTime}s</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.restTimeButton}
+            onPress={() => adjustRestTime(30)}
+            disabled={defaultRestTime >= 300}
+          >
+            <Text style={[
+              styles.restTimeButtonText,
+              defaultRestTime >= 300 && styles.restTimeButtonTextDisabled
+            ]}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Action buttons */}
@@ -354,6 +390,7 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
           </View>
         </View>
       )}
+      {renderAlert()}
     </View>
   );
 };
@@ -369,7 +406,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   header: {
     backgroundColor: theme.cardBackground,
-    paddingTop: 60,
+    // paddingTop is set dynamically using insets.top in component
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: theme.borderColor,
@@ -528,6 +565,56 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     color: theme.textSecondary,
     textAlign: 'center',
+  },
+  restTimeContainer: {
+    backgroundColor: theme.cardBackground,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.borderColor,
+  },
+  restTimeLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  restTimeControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  restTimeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.primaryColor + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.primaryColor,
+  },
+  restTimeButtonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.primaryColor,
+  },
+  restTimeButtonTextDisabled: {
+    opacity: 0.3,
+  },
+  restTimeValueContainer: {
+    minWidth: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  restTimeValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.textPrimary,
   },
   modalOverlay: {
     position: 'absolute',

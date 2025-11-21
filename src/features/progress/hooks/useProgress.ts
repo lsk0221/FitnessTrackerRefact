@@ -4,10 +4,17 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/hooks/useAuth';
+
+/**
+ * Progress hook callbacks interface
+ * 進度 Hook 回調介面
+ */
+export interface UseProgressCallbacks {
+  showAlert?: (title: string, message: string) => void;
+}
 import { getAvailableExercises, loadWorkouts, getPerformedExercisesList } from '../../workouts/services/workoutService';
 import type { PerformedExercise } from '../../workouts/services/workoutService';
 import { getMainMuscleGroup } from '../../../shared/services/data/exerciseLibraryService';
@@ -32,10 +39,16 @@ import type { Workout } from '../../workouts/types/workout.types';
 /**
  * useProgress Hook
  * 管理進度圖表的所有狀態和業務邏輯
+ * @param callbacks - Optional callbacks for showing alerts
  */
-export const useProgress = () => {
+export const useProgress = (callbacks?: UseProgressCallbacks) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  
+  // Extract callbacks with defaults
+  const showAlert = callbacks?.showAlert || ((title: string, message: string) => {
+    console.warn('Alert not handled:', title, message);
+  });
 
   // State
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string>('');
@@ -270,12 +283,12 @@ export const useProgress = () => {
    */
   const handleTargetWeightSave = useCallback(async (weight: number) => {
     if (!selectedExercise) {
-      Alert.alert(t('common.error'), t('progress.pleaseSelectExercise'));
+      showAlert(t('common.error'), t('progress.pleaseSelectExercise'));
       return false;
     }
 
     if (isNaN(weight) || weight <= 0) {
-      Alert.alert(t('common.error'), t('progress.pleaseEnterValidValue'));
+      showAlert(t('common.error'), t('progress.pleaseEnterValidValue'));
       return false;
     }
 
@@ -284,10 +297,10 @@ export const useProgress = () => {
       setTargetWeight(weight);
       return true;
     } else {
-      Alert.alert(t('common.error'), result.error || t('progress.saveTargetWeightFailed'));
+      showAlert(t('common.error'), result.error || t('progress.saveTargetWeightFailed'));
       return false;
     }
-  }, [selectedExercise, chartType, t]);
+  }, [selectedExercise, chartType, t, showAlert]);
 
   /**
    * 獲取可用的動作列表（僅顯示用戶實際執行過的動作）

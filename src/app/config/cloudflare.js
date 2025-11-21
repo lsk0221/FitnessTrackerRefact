@@ -58,8 +58,26 @@ export class CloudflareAuth {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
       
-      const data = await response.json();
-      console.log('Response data:', data);
+      // Check content-type before parsing JSON
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
+      
+      let data;
+      if (isJson) {
+        data = await response.json();
+        console.log('Response data:', data);
+      } else {
+        // Server returned non-JSON (likely HTML error page)
+        const text = await response.text();
+        console.error('Server returned non-JSON response:', text.substring(0, 200));
+        
+        // Provide more specific error message for 500 errors
+        if (response.status >= 500) {
+          throw new Error(`服務器內部錯誤（狀態碼: ${response.status}）。Cloudflare Worker 可能未正確部署或配置。請檢查 Worker 的數據庫綁定和日誌。`);
+        } else {
+          throw new Error(`服務器返回了非 JSON 格式的響應（狀態碼: ${response.status}）。API 可能未正確配置或端點不存在。`);
+        }
+      }
 
       if (!response.ok) {
         // 處理特定的錯誤情況

@@ -7,10 +7,18 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { WorkoutTemplate, TemplateExercise, EditorMode } from '../types/template.types';
 import { createTemplate, updateTemplate, getTemplateById } from '../services/templateService';
+
+/**
+ * Template editor hook callbacks interface
+ * 範本編輯器 Hook 回調介面
+ */
+export interface UseTemplateEditorCallbacks {
+  showAlert?: (title: string, message: string) => void;
+  showSuccess?: (message: string) => void;
+}
 import {
   getAllExercises,
   searchExercises as searchExercisesService,
@@ -83,16 +91,29 @@ interface UseTemplateEditorReturn {
 /**
  * Hook for managing template editor state and actions
  * 管理範本編輯器狀態和操作的 Hook
+ * @param params - Hook parameters
+ * @param callbacks - Optional callbacks for showing alerts
  */
-export const useTemplateEditor = ({
+export const useTemplateEditor = (
+  {
   mode,
   templateId,
   initialTemplate,
-}: UseTemplateEditorParams): UseTemplateEditorReturn => {
+  }: UseTemplateEditorParams,
+  callbacks?: UseTemplateEditorCallbacks
+): UseTemplateEditorReturn => {
   // Get current user for data isolation
   const { user } = useCloudflareAuth();
   const userId = user?.id;
   const { t } = useTranslation();
+  
+  // Extract callbacks with defaults
+  const showAlert = callbacks?.showAlert || ((title: string, message: string) => {
+    console.warn('Alert not handled:', title, message);
+  });
+  const showSuccess = callbacks?.showSuccess || ((message: string) => {
+    console.log('Success:', message);
+  });
 
   // Template state
   const [templateName, setTemplateName] = useState<string>('');
@@ -259,9 +280,9 @@ export const useTemplateEditor = ({
       }
     } catch (err) {
       console.error('Error loading exercises:', err);
-      Alert.alert('Error', 'Failed to load exercises');
+      showAlert('Error', 'Failed to load exercises');
     }
-  }, [userId]);
+  }, [userId, showAlert]);
 
   /**
    * Load dynamic muscle groups list
@@ -299,9 +320,9 @@ export const useTemplateEditor = ({
       }
     } catch (err) {
       console.error('Error searching exercises:', err);
-      Alert.alert('Error', 'Failed to search exercises');
+      showAlert('Error', 'Failed to search exercises');
     }
-  }, [loadAvailableExercises]);
+  }, [loadAvailableExercises, showAlert]);
 
   /**
    * Filter exercises by muscle group
@@ -317,9 +338,9 @@ export const useTemplateEditor = ({
       }
     } catch (err) {
       console.error('Error filtering exercises:', err);
-      Alert.alert('Error', 'Failed to filter exercises');
+      showAlert('Error', 'Failed to filter exercises');
     }
-  }, []);
+  }, [showAlert]);
 
   /**
    * Create a custom exercise
@@ -332,41 +353,41 @@ export const useTemplateEditor = ({
   ) => {
     try {
       if (!exerciseName || exerciseName.trim() === '') {
-        Alert.alert('Error', 'Please enter an exercise name');
+        showAlert('Error', 'Please enter an exercise name');
         return;
       }
 
       if (!muscleGroup || muscleGroup.trim() === '') {
-        Alert.alert('Error', 'Please select a muscle group');
+        showAlert('Error', 'Please select a muscle group');
         return;
       }
 
       if (!equipment || equipment.trim() === '') {
-        Alert.alert('Error', 'Please select equipment');
+        showAlert('Error', 'Please select equipment');
         return;
       }
 
       if (!userId) {
-        Alert.alert('Error', 'You must be logged in to create custom exercises');
+        showAlert('Error', 'You must be logged in to create custom exercises');
         return;
       }
 
       const result = await saveCustomExercise(exerciseName, muscleGroup, equipment, userId);
       
       if (!result.success) {
-        Alert.alert('Error', result.error || 'Failed to create custom exercise');
+        showAlert('Error', result.error || 'Failed to create custom exercise');
         return;
       }
 
       // Reload exercises to include the new custom exercise
       await loadAvailableExercises();
 
-      Alert.alert('Success', `Custom exercise "${exerciseName}" created successfully!`);
+      showSuccess(`Custom exercise "${exerciseName}" created successfully!`);
     } catch (err) {
       console.error('Error creating custom exercise:', err);
-      Alert.alert('Error', 'Failed to create custom exercise');
+      showAlert('Error', 'Failed to create custom exercise');
     }
-  }, [userId, loadAvailableExercises]);
+  }, [userId, loadAvailableExercises, showAlert, showSuccess]);
 
   /**
    * Add an exercise to the template
@@ -381,10 +402,9 @@ export const useTemplateEditor = ({
     );
 
     if (isDuplicate) {
-      Alert.alert(
+      showAlert(
         'Exercise Already Added',
-        `"${exercise.name || exercise.nameKey}" is already in this template. Each exercise can only be added once.`,
-        [{ text: 'OK', style: 'default' }]
+        `"${exercise.name || exercise.nameKey}" is already in this template. Each exercise can only be added once.`
       );
       return;
     }
@@ -450,22 +470,16 @@ export const useTemplateEditor = ({
 
     // Show feedback
     if (newExercises.length > 0 && duplicates.length > 0) {
-      Alert.alert(
+      showAlert(
         'Exercises Added',
-        `Added ${newExercises.length} exercise(s).\n\n${duplicates.length} duplicate(s) skipped: ${duplicates.join(', ')}`,
-        [{ text: 'OK', style: 'default' }]
+        `Added ${newExercises.length} exercise(s).\n\n${duplicates.length} duplicate(s) skipped: ${duplicates.join(', ')}`
       );
     } else if (newExercises.length > 0) {
-      Alert.alert(
-        'Success',
-        `Successfully added ${newExercises.length} exercise(s) to template.`,
-        [{ text: 'OK', style: 'default' }]
-      );
+      showSuccess(`Successfully added ${newExercises.length} exercise(s) to template.`);
     } else if (duplicates.length > 0) {
-      Alert.alert(
+      showAlert(
         'All Duplicates',
-        `All ${duplicates.length} selected exercise(s) are already in this template.`,
-        [{ text: 'OK', style: 'default' }]
+        `All ${duplicates.length} selected exercise(s) are already in this template.`
       );
     }
 
@@ -591,7 +605,7 @@ export const useTemplateEditor = ({
     // Validate template
     const validation = validateTemplate();
     if (!validation.isValid) {
-      Alert.alert('Validation Error', validation.errors.join('\n'));
+      showAlert('Validation Error', validation.errors.join('\n'));
       return { success: false };
     }
 
@@ -638,7 +652,7 @@ export const useTemplateEditor = ({
 
       const successMessage =
         mode === 'edit' ? 'Template updated successfully' : 'Template created successfully';
-      Alert.alert('Success', successMessage);
+      showSuccess(successMessage);
 
       return {
         success: true,
@@ -647,7 +661,7 @@ export const useTemplateEditor = ({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save template';
       setError(errorMessage);
-      Alert.alert('Error', errorMessage);
+      showAlert('Error', errorMessage);
       console.error('Error saving template:', err);
       return { success: false };
     } finally {
@@ -664,6 +678,8 @@ export const useTemplateEditor = ({
     estimatedTime,
     validateTemplate,
     userId,
+    showAlert,
+    showSuccess,
   ]);
 
   return {

@@ -1,23 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext';
+import { useAppAlert } from '../../shared/hooks/useAppAlert';
 
 export const ProfileScreenPlaceholder = () => {
   const { logout, user } = useCloudflareAuth();
+  const { t } = useTranslation();
+  const { showConfirmation, renderAlert } = useAppAlert();
 
   const handleLogout = () => {
-    Alert.alert(
-      '登出',
-      '確定要登出嗎？',
-      [
-        { text: '取消', style: 'cancel' },
-        { 
-          text: '登出', 
-          style: 'destructive',
-          onPress: () => logout()
-        }
-      ]
-    );
+    showConfirmation({
+      title: t('profile.logout') || '登出',
+      message: t('profile.confirmLogout') || '確定要登出嗎？',
+      confirmText: t('profile.logout') || '登出',
+      cancelText: t('common.cancel') || '取消',
+      confirmStyle: 'destructive',
+      onConfirm: () => logout(),
+    });
   };
 
   return (
@@ -34,6 +34,7 @@ export const ProfileScreenPlaceholder = () => {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>登出</Text>
       </TouchableOpacity>
+      {renderAlert()}
     </View>
   );
 };

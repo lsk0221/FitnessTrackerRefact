@@ -12,10 +12,12 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { useUnit } from '../../../shared/hooks/useUnit';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import WorkoutCalendar from '../components/WorkoutCalendar';
 import WorkoutDetailModal from '../components/WorkoutDetailModal';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 
 /**
  * HistoryScreen Component
@@ -25,8 +27,9 @@ const HistoryScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { currentUnit } = useUnit();
+  const { showAlert: showAppAlert, showConfirmation: showAppConfirmation, renderAlert } = useAppAlert();
   
-  // Get all state and logic from the hook
+  // Get all state and logic from the hook with alert callbacks
   const {
     workouts,
     workoutData,
@@ -50,30 +53,32 @@ const HistoryScreen: React.FC = () => {
     handleCloseEditModal,
     updateEditForm,
     muscleGroupsList,
-  } = useWorkoutHistory();
+  } = useWorkoutHistory({
+    showAlert: (title: string, message: string) => {
+      showAppAlert({ title, message });
+    },
+    showConfirmation: (options) => {
+      showAppConfirmation({
+        title: options.title,
+        message: options.message,
+        confirmText: options.confirmText || t('common.confirm'),
+        cancelText: options.cancelText || t('common.cancel'),
+        confirmStyle: options.confirmStyle || 'default',
+        onConfirm: options.onConfirm,
+      });
+    },
+    showSuccess: (message: string) => {
+      showAppAlert({
+        title: t('common.success'),
+        message,
+      });
+    },
+  });
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.backgroundColor,
-    },
-    header: {
-      backgroundColor: theme.cardBackground,
-      padding: 20,
-      paddingTop: 40,
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderColor,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: theme.textPrimary,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      marginTop: 4,
     },
     content: {
       flex: 1,
@@ -83,10 +88,10 @@ const HistoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('calendar.title')}</Text>
-        <Text style={styles.subtitle}>{t('calendar.subtitle')}</Text>
-      </View>
+      <ScreenHeader
+        title={t('calendar.title')}
+        subtitle={t('calendar.subtitle')}
+      />
 
       {/* Calendar and Legend */}
       <ScrollView
@@ -129,6 +134,7 @@ const HistoryScreen: React.FC = () => {
         onSaveEdit={handleSaveEdit}
         muscleGroupsList={muscleGroupsList}
       />
+      {renderAlert()}
     </View>
   );
 };

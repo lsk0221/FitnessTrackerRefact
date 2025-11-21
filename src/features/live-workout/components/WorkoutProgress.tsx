@@ -41,12 +41,9 @@ const WorkoutProgress: React.FC<WorkoutProgressProps> = ({
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: `${progress}%` }]} />
       </View>
-      <Text style={styles.progressText}>
-        {currentExerciseIndex + 1} / {totalExercises}
-      </Text>
       {completedExercises > 0 && (
         <Text style={styles.completedText}>
-          {completedExercises} completed
+          {completedExercises} {completedExercises === 1 ? 'completed' : 'completed'}
         </Text>
       )}
     </View>
@@ -59,35 +56,29 @@ const WorkoutProgress: React.FC<WorkoutProgressProps> = ({
  */
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     backgroundColor: theme.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: theme.borderColor,
   },
   progressBarContainer: {
-    height: 4,
+    height: 3,
     backgroundColor: theme.borderColor,
     borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   progressBar: {
     height: '100%',
     backgroundColor: theme.primaryColor,
     borderRadius: 2,
   },
-  progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    textAlign: 'center',
-  },
   completedText: {
-    fontSize: 12,
+    fontSize: 11,
     color: theme.textSecondary,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
 });
 

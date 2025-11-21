@@ -58,9 +58,9 @@ export const finishWorkout = async (
       
       // Extract raw English strings (no translation keys)
       // 提取原始英文字符串（不使用翻譯鍵）
-      // Get exercise name - prefer exercise field, fallback to name
-      // 獲取動作名稱 - 優先使用 exercise 字段，否則使用 name
-      const exerciseName = completedExercise.exercise || completedExercise.name || '';
+      // Get exercise name - use exercise field
+      // 獲取動作名稱 - 使用 exercise 字段
+      const exerciseName = completedExercise.exercise || '';
       
       // Get muscle group - use raw string directly
       // 獲取肌肉群 - 直接使用原始字符串
@@ -121,104 +121,143 @@ export const getSmartSwapSuggestions = async (
     const suggestions: SmartSwapSuggestion[] = [];
 
     // Filter out the current exercise
-    const availableExercises = allExercises.filter(
-      ex => ex.name !== currentExercise.exercise && 
-            ex.name !== currentExercise.name
-    );
+    // 過濾掉當前動作
+    const currentExerciseNameKey = currentExercise.nameKey || currentExercise.exercise || currentExercise.name || '';
+    const availableExercises = allExercises.filter(ex => {
+      const exNameKey = ex.nameKey || ex.name || '';
+      return exNameKey !== currentExerciseNameKey && 
+             ex.id !== currentExercise.id;
+    });
+
+    /**
+     * Helper function to map Exercise to ExerciseEntry
+     * 將 Exercise 映射為 ExerciseEntry 的輔助函數
+     */
+    const mapExerciseToEntry = (ex: any): ExerciseEntry => {
+      // Extract name from nameKey if available, otherwise use name or id as fallback
+      // 如果可用，從 nameKey 中提取名稱，否則使用 name 或 id 作為後備
+      const nameFromKey = ex.nameKey?.replace('exercises.', '') || '';
+      const exerciseName = nameFromKey || ex.name || ex.id || 'Unknown Exercise';
+      
+      // Extract muscle group from muscleGroupKey if available, otherwise use muscle_group
+      // 如果可用，從 muscleGroupKey 中提取肌肉群，否則使用 muscle_group
+      const muscleGroupFromKey = ex.muscleGroupKey?.replace('muscleGroups.', '') || '';
+      const muscleGroupName = muscleGroupFromKey || ex.muscle_group || 'Unknown';
+      
+      return {
+        id: ex.id || `unknown_${Date.now()}`,
+        nameKey: ex.nameKey || `exercises.${exerciseName.toLowerCase().replace(/\s+/g, '_')}`,
+        muscleGroupKey: ex.muscleGroupKey || `muscleGroups.${muscleGroupName}`,
+        exercise: exerciseName,
+        name: exerciseName,
+        muscleGroup: muscleGroupName,
+        movementPattern: ex.movement_pattern || '',
+        equipment: ex.equipment || '',
+        tags: ex.tags || [],
+      } as ExerciseEntry;
+    };
 
     // Priority 1: Same muscle group and movement pattern
     if (currentExercise.muscleGroup && currentExercise.movementPattern) {
+      const currentMuscleGroupKey = currentExercise.muscleGroupKey || `muscleGroups.${currentExercise.muscleGroup}`;
       const sameMuscleAndPattern = availableExercises
-        .filter(ex => 
-          ex.muscle_group?.toLowerCase() === currentExercise.muscleGroup.toLowerCase() &&
+        .filter(ex => {
+          const exMuscleGroupKey = ex.muscleGroupKey || `muscleGroups.${ex.muscle_group || ''}`;
+          return (
+            exMuscleGroupKey.toLowerCase() === currentMuscleGroupKey.toLowerCase() &&
           ex.movement_pattern?.toLowerCase() === currentExercise.movementPattern.toLowerCase()
-        )
+          );
+        })
         .slice(0, limit)
-        .map(ex => ({
-          exercise: {
-            id: ex.id,
-            exercise: ex.name,
-            name: ex.name,
-            muscleGroup: ex.muscle_group,
-            movementPattern: ex.movement_pattern,
-            equipment: ex.equipment,
-            tags: ex.tags,
-          } as ExerciseEntry,
+        .map(ex => {
+          const entry = mapExerciseToEntry(ex);
+          return {
+            exercise: entry,
           reason: 'Same muscle group and movement pattern',
           similarityScore: 100,
-        }));
+          };
+        })
+        .filter(item => item.exercise.id && item.exercise.exercise !== 'Unknown Exercise');
       suggestions.push(...sameMuscleAndPattern);
     }
 
     // Priority 2: Same muscle group
     if (currentExercise.muscleGroup && suggestions.length < limit) {
+      const currentMuscleGroupKey = currentExercise.muscleGroupKey || `muscleGroups.${currentExercise.muscleGroup}`;
       const sameMuscleGroup = availableExercises
-        .filter(ex => 
-          ex.muscle_group?.toLowerCase() === currentExercise.muscleGroup.toLowerCase() &&
-          !suggestions.some(s => s.exercise.exercise === ex.name)
-        )
+        .filter(ex => {
+          const exMuscleGroupKey = ex.muscleGroupKey || `muscleGroups.${ex.muscle_group || ''}`;
+          const exNameKey = ex.nameKey || ex.name || '';
+          return (
+            exMuscleGroupKey.toLowerCase() === currentMuscleGroupKey.toLowerCase() &&
+            !suggestions.some(s => {
+              const sNameKey = s.exercise.nameKey || s.exercise.exercise || '';
+              return sNameKey === exNameKey;
+            })
+          );
+        })
         .slice(0, limit - suggestions.length)
-        .map(ex => ({
-          exercise: {
-            id: ex.id,
-            exercise: ex.name,
-            name: ex.name,
-            muscleGroup: ex.muscle_group,
-            movementPattern: ex.movement_pattern,
-            equipment: ex.equipment,
-            tags: ex.tags,
-          } as ExerciseEntry,
+        .map(ex => {
+          const entry = mapExerciseToEntry(ex);
+          return {
+            exercise: entry,
           reason: 'Same muscle group',
           similarityScore: 80,
-        }));
+          };
+        })
+        .filter(item => item.exercise.id && item.exercise.exercise !== 'Unknown Exercise');
       suggestions.push(...sameMuscleGroup);
     }
 
     // Priority 3: Same movement pattern
     if (currentExercise.movementPattern && suggestions.length < limit) {
       const samePattern = availableExercises
-        .filter(ex => 
+        .filter(ex => {
+          const exNameKey = ex.nameKey || ex.name || '';
+          return (
           ex.movement_pattern?.toLowerCase() === currentExercise.movementPattern.toLowerCase() &&
-          !suggestions.some(s => s.exercise.exercise === ex.name)
-        )
+            !suggestions.some(s => {
+              const sNameKey = s.exercise.nameKey || s.exercise.exercise || '';
+              return sNameKey === exNameKey;
+            })
+          );
+        })
         .slice(0, limit - suggestions.length)
-        .map(ex => ({
-          exercise: {
-            id: ex.id,
-            exercise: ex.name,
-            name: ex.name,
-            muscleGroup: ex.muscle_group,
-            movementPattern: ex.movement_pattern,
-            equipment: ex.equipment,
-            tags: ex.tags,
-          } as ExerciseEntry,
+        .map(ex => {
+          const entry = mapExerciseToEntry(ex);
+          return {
+            exercise: entry,
           reason: 'Same movement pattern',
           similarityScore: 60,
-        }));
+          };
+        })
+        .filter(item => item.exercise.id && item.exercise.exercise !== 'Unknown Exercise');
       suggestions.push(...samePattern);
     }
 
     // Priority 4: Same equipment
     if (currentExercise.equipment && suggestions.length < limit) {
       const sameEquipment = availableExercises
-        .filter(ex => 
+        .filter(ex => {
+          const exNameKey = ex.nameKey || ex.name || '';
+          return (
           ex.equipment?.toLowerCase() === currentExercise.equipment.toLowerCase() &&
-          !suggestions.some(s => s.exercise.exercise === ex.name)
-        )
+            !suggestions.some(s => {
+              const sNameKey = s.exercise.nameKey || s.exercise.exercise || '';
+              return sNameKey === exNameKey;
+            })
+          );
+        })
         .slice(0, limit - suggestions.length)
-        .map(ex => ({
-          exercise: {
-            id: ex.id,
-            exercise: ex.name,
-            name: ex.name,
-            muscleGroup: ex.muscle_group,
-            movementPattern: ex.movement_pattern,
-            equipment: ex.equipment,
-            tags: ex.tags,
-          } as ExerciseEntry,
+        .map(ex => {
+          const entry = mapExerciseToEntry(ex);
+          return {
+            exercise: entry,
           reason: 'Same equipment',
           similarityScore: 40,
-        }));
+          };
+        })
+        .filter(item => item.exercise.id && item.exercise.exercise !== 'Unknown Exercise');
       suggestions.push(...sameEquipment);
     }
 

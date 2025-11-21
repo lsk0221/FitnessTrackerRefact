@@ -14,9 +14,11 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
 } from 'react-native';
+// @ts-ignore - Expo vector icons types
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { TemplateExercise } from '../types/template.types';
 
 interface TemplateEditorFormProps {
@@ -47,24 +49,21 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
   theme,
 }) => {
   const { t } = useTranslation();
+  const { showConfirmation, renderAlert } = useAppAlert();
   const styles = createStyles(theme);
 
   /**
    * Handle remove exercise with confirmation
    */
   const handleRemoveExercise = (exerciseId: string, exerciseName: string) => {
-    Alert.alert(
-      t('templateEditor.removeExercise'),
-      t('templateEditor.removeExerciseMessage', { name: exerciseName }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          style: 'destructive',
-          onPress: () => onRemoveExercise(exerciseId),
-        },
-      ]
-    );
+    showConfirmation({
+      title: t('templateEditor.removeExercise'),
+      message: t('templateEditor.removeExerciseMessage', { name: exerciseName }),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      confirmStyle: 'destructive',
+      onConfirm: () => onRemoveExercise(exerciseId),
+    });
   };
 
   /**
@@ -167,11 +166,65 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
             />
           </View>
         </View>
+
+        {/* Rest Time Setting */}
+        <View style={styles.restTimeContainer}>
+          <Text style={styles.restTimeLabel}>
+            {t('templateEditor.restTime') || 'Rest Time'}
+          </Text>
+          <View style={styles.restTimeControls}>
+            <TouchableOpacity
+              style={styles.restTimeButton}
+              onPress={() => {
+                const currentRestTime = exercise.restTime || 0;
+                const newRestTime = Math.max(0, currentRestTime - 30);
+                onUpdateExercise(exercise.id, { 
+                  restTime: newRestTime > 0 ? newRestTime : undefined 
+                });
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="minus" size={16} color={theme.primaryColor} />
+            </TouchableOpacity>
+            
+            <View style={styles.restTimeValueContainer}>
+              <Text style={styles.restTimeValue}>
+                {exercise.restTime ? `${exercise.restTime}s` : (t('templateEditor.useGlobal') || 'Global')}
+              </Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.restTimeButton}
+              onPress={() => {
+                const currentRestTime = exercise.restTime || 0;
+                const newRestTime = currentRestTime + 30;
+                onUpdateExercise(exercise.id, { restTime: newRestTime });
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="plus" size={16} color={theme.primaryColor} />
+            </TouchableOpacity>
+          </View>
+          {exercise.restTime && (
+            <TouchableOpacity
+              style={styles.clearRestTimeButton}
+              onPress={() => {
+                onUpdateExercise(exercise.id, { restTime: undefined });
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.clearRestTimeText}>
+                {t('templateEditor.useGlobal') || 'Use Global'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
 
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Template Name */}
       <View style={styles.section}>
@@ -241,6 +294,8 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
       {/* Spacer at bottom */}
       <View style={styles.bottomSpacer} />
     </ScrollView>
+      {renderAlert()}
+    </View>
   );
 };
 
@@ -380,6 +435,59 @@ const createStyles = (theme: any) =>
       fontSize: 14,
       color: theme.textPrimary,
       textAlign: 'center',
+    },
+    restTimeContainer: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderColor,
+    },
+    restTimeLabel: {
+      fontSize: 11,
+      color: theme.textSecondary,
+      marginBottom: 8,
+      fontWeight: '500',
+    },
+    restTimeControls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 12,
+    },
+    restTimeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.primaryColor + '20',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.primaryColor,
+    },
+    restTimeValueContainer: {
+      minWidth: 80,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    restTimeValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.textPrimary,
+      textAlign: 'center',
+    },
+    clearRestTimeButton: {
+      marginTop: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      alignSelf: 'center',
+      borderRadius: 6,
+      backgroundColor: theme.backgroundColor,
+      borderWidth: 1,
+      borderColor: theme.borderColor,
+    },
+    clearRestTimeText: {
+      fontSize: 12,
+      color: theme.textSecondary,
     },
     deleteButton: {
       padding: 8,

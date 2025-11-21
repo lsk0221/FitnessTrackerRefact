@@ -7,8 +7,16 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { WorkoutTemplate } from '../types/template.types';
+
+/**
+ * Templates hook callbacks interface
+ * 範本 Hook 回調介面
+ */
+export interface UseTemplatesCallbacks {
+  showAlert?: (title: string, message: string) => void;
+  showSuccess?: (message: string) => void;
+}
 import {
   getUserTemplates,
   getPresetTemplates,
@@ -40,11 +48,20 @@ interface UseTemplatesReturn {
 /**
  * Hook for managing workout templates
  * 管理訓練範本的 Hook
+ * @param callbacks - Optional callbacks for showing alerts
  */
-export const useTemplates = (): UseTemplatesReturn => {
+export const useTemplates = (callbacks?: UseTemplatesCallbacks): UseTemplatesReturn => {
   // Get current user for data isolation
   const { user } = useCloudflareAuth();
   const userId = user?.id;
+  
+  // Extract callbacks with defaults
+  const showAlert = callbacks?.showAlert || ((title: string, message: string) => {
+    console.warn('Alert not handled:', title, message);
+  });
+  const showSuccess = callbacks?.showSuccess || ((message: string) => {
+    console.log('Success:', message);
+  });
 
   // State
   const [userTemplates, setUserTemplates] = useState<WorkoutTemplate[]>([]);
@@ -113,14 +130,14 @@ export const useTemplates = (): UseTemplatesReturn => {
         // Refresh templates after deletion
         await loadTemplates();
 
-        Alert.alert('Success', 'Template deleted successfully');
+        showSuccess('Template deleted successfully');
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete template';
-        Alert.alert('Error', errorMessage);
+        showAlert('Error', errorMessage);
         console.error('Error deleting template:', err);
       }
     },
-    [loadTemplates, userId]
+    [loadTemplates, userId, showAlert, showSuccess]
   );
 
   /**

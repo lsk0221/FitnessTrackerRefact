@@ -433,6 +433,130 @@ describe('liveWorkoutService', () => {
       const suggestions = result.data as SmartSwapSuggestion[];
       expect(suggestions).toHaveLength(0);
     });
+
+    it('should correctly map exercise data and avoid "Unknown Exercise"', async () => {
+      // Arrange
+      const currentExercise: ExerciseEntry = {
+        id: '1',
+        exercise: 'Bench Press',
+        nameKey: 'exercises.bench_press',
+        muscleGroup: 'Chest',
+        muscleGroupKey: 'muscleGroups.Chest',
+        movementPattern: 'Horizontal Press',
+        equipment: 'Barbell',
+      };
+
+      const availableExercises = [
+        {
+          id: '2',
+          name: 'Incline Dumbbell Press',
+          nameKey: 'exercises.incline_dumbbell_press',
+          muscle_group: 'Chest',
+          muscleGroupKey: 'muscleGroups.Chest',
+          movement_pattern: 'Horizontal Press',
+          equipment: 'Dumbbell',
+        },
+        {
+          id: '3',
+          name: 'Custom Exercise',
+          // Missing nameKey - should use name
+          muscle_group: 'Chest',
+          // Missing muscleGroupKey - should use muscle_group
+          movement_pattern: 'Horizontal Press',
+          equipment: 'Dumbbell',
+        },
+      ];
+
+      mockedExerciseLibraryService.getAllExercises.mockResolvedValue({
+        success: true,
+        data: availableExercises,
+      });
+
+      // Act
+      const result = await liveWorkoutService.getSmartSwapSuggestions(currentExercise, 5);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      const suggestions = result.data as SmartSwapSuggestion[];
+      expect(suggestions.length).toBeGreaterThan(0);
+      
+      // Verify mapping logic - should NOT have "Unknown Exercise" or "Unknown" muscle group
+      suggestions.forEach(suggestion => {
+        expect(suggestion.exercise.exercise).not.toBe('Unknown Exercise');
+        expect(suggestion.exercise.exercise).toBeTruthy();
+        expect(suggestion.exercise.muscleGroup).not.toBe('Unknown');
+        expect(suggestion.exercise.muscleGroup).toBeTruthy();
+        expect(suggestion.exercise.id).toBeTruthy();
+        
+        // Verify nameKey is correctly set
+        if (suggestion.exercise.nameKey) {
+          expect(suggestion.exercise.nameKey).toContain('exercises.');
+        }
+        
+        // Verify muscleGroupKey is correctly set
+        if (suggestion.exercise.muscleGroupKey) {
+          expect(suggestion.exercise.muscleGroupKey).toContain('muscleGroups.');
+        }
+      });
+    });
+
+    it('should filter out invalid exercises (no id or name)', async () => {
+      // Arrange
+      const currentExercise: ExerciseEntry = {
+        id: '1',
+        exercise: 'Bench Press',
+        nameKey: 'exercises.bench_press',
+        muscleGroup: 'Chest',
+        muscleGroupKey: 'muscleGroups.Chest',
+        movementPattern: 'Horizontal Press',
+        equipment: 'Barbell',
+      };
+
+      const availableExercises = [
+        {
+          id: '2',
+          name: 'Valid Exercise',
+          nameKey: 'exercises.valid_exercise',
+          muscle_group: 'Chest',
+          muscleGroupKey: 'muscleGroups.Chest',
+          movement_pattern: 'Horizontal Press',
+          equipment: 'Barbell',
+        },
+        {
+          // Missing id
+          name: 'Invalid Exercise 1',
+          muscle_group: 'Chest',
+        },
+        {
+          id: '3',
+          // Missing name
+          muscle_group: 'Chest',
+        },
+      ];
+
+      mockedExerciseLibraryService.getAllExercises.mockResolvedValue({
+        success: true,
+        data: availableExercises,
+      });
+
+      // Act
+      const result = await liveWorkoutService.getSmartSwapSuggestions(currentExercise, 5);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      const suggestions = result.data as SmartSwapSuggestion[];
+      
+      // Should only include valid exercises
+      suggestions.forEach(suggestion => {
+        expect(suggestion.exercise.id).toBeTruthy();
+        expect(suggestion.exercise.exercise).toBeTruthy();
+        expect(suggestion.exercise.exercise).not.toBe('Unknown Exercise');
+      });
+    });
   });
 });
 

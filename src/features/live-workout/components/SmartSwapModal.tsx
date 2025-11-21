@@ -125,7 +125,28 @@ const SmartSwapModal: React.FC<SmartSwapModalProps> = ({
    * Render exercise card
    * 渲染動作卡片
    */
-  const renderExerciseCard = (exercise: ExerciseEntry, reason?: string) => (
+  const renderExerciseCard = (exercise: ExerciseEntry, reason?: string) => {
+    // 1. Get display name - Unified naming display logic
+    // 獲取顯示名稱 - 統一的命名顯示邏輯
+    const displayName = exercise.nameKey 
+      ? t(exercise.nameKey) 
+      : (exercise.exercise || exercise.name || t('liveMode.unknownExercise') || 'Unknown Exercise');
+
+    // 2. Get muscle group name - Unified muscle group display logic
+    // 獲取肌肉群名稱 - 統一的肌肉群顯示邏輯
+    const muscleGroupKey = exercise.muscleGroupKey || exercise.muscleGroup || 'Unknown';
+    const displayMuscleGroup = (() => {
+      if (muscleGroupKey === 'Unknown') return muscleGroupKey;
+      if (muscleGroupKey.startsWith('muscleGroups.')) {
+        const translatedName = t(muscleGroupKey);
+        return translatedName === muscleGroupKey ? muscleGroupKey.replace('muscleGroups.', '') : translatedName;
+      }
+      const translationKey = `muscleGroups.${muscleGroupKey}`;
+      const translatedName = t(translationKey);
+      return translatedName === translationKey ? muscleGroupKey : translatedName;
+    })();
+
+    return (
     <TouchableOpacity
       style={styles.exerciseCard}
       onPress={() => handleSelectExercise(exercise)}
@@ -133,31 +154,15 @@ const SmartSwapModal: React.FC<SmartSwapModalProps> = ({
       <View style={styles.exerciseCardContent}>
         <View style={styles.exerciseIcon}>
           <Text style={styles.exerciseIconText}>
-            {exercise.muscleGroup?.[0] || 'E'}
+              {displayMuscleGroup?.[0]?.toUpperCase() || 'E'}
           </Text>
         </View>
         <View style={styles.exerciseInfo}>
           <Text style={styles.exerciseName}>
-            {exercise.nameKey ? t(exercise.nameKey) : (exercise.exercise || exercise.name || 'Unknown Exercise')}
+              {displayName}
           </Text>
           <Text style={styles.exerciseDetails}>
-            {exercise.movementPattern || 'Unknown'} / {(() => {
-              // Use muscleGroupKey if available, otherwise fall back to muscleGroup
-              // 如果可用，使用 muscleGroupKey，否則回退到 muscleGroup
-              const muscleGroupKey = exercise.muscleGroupKey || exercise.muscleGroup || 'Unknown';
-              if (muscleGroupKey === 'Unknown') return muscleGroupKey;
-              // If it's already a translation key (starts with 'muscleGroups.'), use it directly
-              // 如果已經是翻譯鍵（以 'muscleGroups.' 開頭），直接使用
-              if (muscleGroupKey.startsWith('muscleGroups.')) {
-                const translatedName = t(muscleGroupKey);
-                return translatedName === muscleGroupKey ? muscleGroupKey.replace('muscleGroups.', '') : translatedName;
-              }
-              // Otherwise, construct the translation key
-              // 否則，構造翻譯鍵
-              const translationKey = `muscleGroups.${muscleGroupKey}`;
-              const translatedName = t(translationKey);
-              return translatedName === translationKey ? muscleGroupKey : translatedName;
-            })()} / {exercise.equipment || 'Unknown'}
+              {exercise.movementPattern || t('liveMode.unknown') || 'Unknown'} / {displayMuscleGroup} / {exercise.equipment || t('liveMode.unknown') || 'Unknown'}
           </Text>
           {reason && (
             <Text style={styles.reasonText}>{reason}</Text>
@@ -169,6 +174,7 @@ const SmartSwapModal: React.FC<SmartSwapModalProps> = ({
       </View>
     </TouchableOpacity>
   );
+  };
 
   return (
     <Modal

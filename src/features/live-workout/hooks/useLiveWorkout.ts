@@ -68,6 +68,13 @@ interface UseLiveWorkoutReturn {
   // Smart swap
   replaceExercise: (newExercise: ExerciseEntry) => void;
   
+  // Exercise management
+  addExercise: (exercise: ExerciseEntry) => void;
+  removeCurrentExercise: () => boolean; // Returns true if workout becomes empty
+  
+  // Rest time management
+  updateCurrentExerciseRestTime: (newTime: number) => void;
+  
   // Metadata
   workoutStartTime: Date;
   templateId?: string;
@@ -167,7 +174,10 @@ export const useLiveWorkout = (
     setCompletedLog(prev => [...prev, logEntry]);
 
     // Trigger rest timer (Golden Rules)
+    // 觸發休息計時器（黃金規則）
     if (!isLastSet && onSetCompleted) {
+      // Priority: Use exercise-specific restTime if available, otherwise use user-configured initialRestTime
+      // 優先級：如果動作有特定的 restTime 則使用它，否則使用使用者設定的 initialRestTime
       const restTime = currentExerciseTemplate.restTime || initialRestTime;
       onSetCompleted(restTime);
     }
@@ -372,6 +382,80 @@ export const useLiveWorkout = (
     return currentExerciseIndex === workoutPlan.length - 1 && canFinishExercise;
   }, [currentExerciseIndex, workoutPlan.length, canFinishExercise]);
 
+  /**
+   * Add a new exercise to the workout plan
+   * 向訓練計劃中添加新動作
+   * 
+   * Inserts the exercise after the current exercise index
+   * 將動作插入到當前索引之後
+   */
+  const addExercise = useCallback((exercise: ExerciseEntry) => {
+    setWorkoutPlan((prev) => {
+      const newPlan = [...prev];
+      // Insert after current exercise index
+      newPlan.splice(currentExerciseIndex + 1, 0, exercise);
+      return newPlan;
+    });
+    // Stay on current exercise (don't auto-navigate)
+  }, [currentExerciseIndex]);
+
+  /**
+   * Remove current exercise from workout plan
+   * 從訓練計劃中移除當前動作
+   * 
+   * Returns true if workout becomes empty after removal
+   * 如果移除後訓練變空則返回 true
+   */
+  const removeCurrentExercise = useCallback((): boolean => {
+    let isEmpty = false;
+    let newIndex = currentExerciseIndex;
+    
+    setWorkoutPlan((prev) => {
+      if (prev.length <= 1) {
+        isEmpty = true;
+        return []; // Return empty array to indicate workout is empty
+      }
+      
+      const newPlan = prev.filter((_, index) => index !== currentExerciseIndex);
+      isEmpty = newPlan.length === 0;
+      
+      // Navigation logic: move to next exercise, or to new last if current was last
+      if (currentExerciseIndex >= newPlan.length) {
+        newIndex = Math.max(0, newPlan.length - 1);
+      } else {
+        newIndex = currentExerciseIndex; // Stay at same index (which now points to next exercise)
+      }
+      
+      return newPlan;
+    });
+    
+    // Update index after state update (only if not empty)
+    if (!isEmpty) {
+      setCurrentExerciseIndex(newIndex);
+    } else {
+      setCurrentExerciseIndex(0); // Reset to 0 for empty state
+    }
+    
+    return isEmpty;
+  }, [currentExerciseIndex]);
+
+  /**
+   * Update rest time for current exercise
+   * 更新當前練習的休息時間
+   */
+  const updateCurrentExerciseRestTime = useCallback((newTime: number) => {
+    setWorkoutPlan((prev) => {
+      const updatedPlan = [...prev];
+      if (updatedPlan[currentExerciseIndex]) {
+        updatedPlan[currentExerciseIndex] = {
+          ...updatedPlan[currentExerciseIndex],
+          restTime: newTime,
+        };
+      }
+      return updatedPlan;
+    });
+  }, [currentExerciseIndex]);
+
   return {
     // Derived state
     currentExerciseTemplate,
@@ -400,6 +484,13 @@ export const useLiveWorkout = (
     
     // Smart swap
     replaceExercise,
+    
+    // Exercise management
+    addExercise,
+    removeCurrentExercise,
+    
+    // Rest time management
+    updateCurrentExerciseRestTime,
     
     // Metadata
     workoutStartTime,

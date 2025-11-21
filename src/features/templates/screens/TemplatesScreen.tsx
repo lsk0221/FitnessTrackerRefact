@@ -7,10 +7,14 @@
  */
 
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
+// @ts-ignore - Expo vector icons types
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 import { useTemplates } from '../hooks/useTemplates';
 import { WorkoutTemplate } from '../types/template.types';
 import TemplateList from '../components/TemplateList';
@@ -28,6 +32,7 @@ type RootStackParamList = {
 const TemplatesScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { showConfirmation, showAlert: showAppAlert, renderAlert } = useAppAlert();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const styles = createStyles(theme);
 
@@ -40,7 +45,17 @@ const TemplatesScreen: React.FC = () => {
     refreshTemplates,
     deleteUserTemplate,
     loadTemplates,
-  } = useTemplates();
+  } = useTemplates({
+    showAlert: (title: string, message: string) => {
+      showAppAlert({ title, message });
+    },
+    showSuccess: (message: string) => {
+      showAppAlert({
+        title: t('common.success'),
+        message,
+      });
+    },
+  });
 
   /**
    * Reload templates when screen comes into focus
@@ -76,42 +91,34 @@ const TemplatesScreen: React.FC = () => {
    * Handle copy preset template
    */
   const handleCopyTemplate = (template: WorkoutTemplate) => {
-    Alert.alert(
-      t('templates.copyTemplate'),
-      t('templates.copyTemplateMessage', { name: template.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          onPress: () => {
+    showConfirmation({
+      title: t('templates.copyTemplate'),
+      message: t('templates.copyTemplateMessage', { name: template.name }),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      onConfirm: () => {
             navigation.navigate('TemplateEditor', {
               mode: 'copy',
               template,
             });
           },
-        },
-      ]
-    );
+    });
   };
 
   /**
    * Handle delete template
    */
   const handleDeleteTemplate = (template: WorkoutTemplate) => {
-    Alert.alert(
-      t('templates.deleteTemplate'),
-      t('templates.deleteTemplateMessage', { name: template.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          style: 'destructive',
-          onPress: async () => {
+    showConfirmation({
+      title: t('templates.deleteTemplate'),
+      message: t('templates.deleteTemplateMessage', { name: template.name }),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      confirmStyle: 'destructive',
+      onConfirm: async () => {
             await deleteUserTemplate(template.id);
           },
-        },
-      ]
-    );
+    });
   };
 
   /**
@@ -126,19 +133,25 @@ const TemplatesScreen: React.FC = () => {
    */
   React.useEffect(() => {
     if (error) {
-      Alert.alert(t('common.error'), error);
+      showAppAlert({
+        title: t('common.error'),
+        message: error,
+      });
     }
-  }, [error, t]);
+  }, [error, t, showAppAlert]);
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('templates.title')}</Text>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateTemplate}>
-          <Text style={styles.createButtonText}>+ {t('templates.createNew')}</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title={t('templates.title')}
+        subtitle={t('templates.subtitle')}
+        rightComponent={
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateTemplate} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="plus" size={28} color={theme.primaryColor} />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Loading State - Show on initial load */}
       {loading && userTemplates.length === 0 && presetTemplates.length === 0 ? (
@@ -187,6 +200,7 @@ const TemplatesScreen: React.FC = () => {
         </View>
       </ScrollView>
       )}
+      {renderAlert()}
     </View>
   );
 };
@@ -200,31 +214,10 @@ const createStyles = (theme: any) =>
       flex: 1,
       backgroundColor: theme.backgroundColor,
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 20,
-      paddingTop: 60,
-      backgroundColor: theme.cardBackground,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderColor,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: theme.textPrimary,
-    },
     createButton: {
-      backgroundColor: theme.primaryColor,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 20,
-    },
-    createButtonText: {
-      color: '#FFFFFF',
-      fontSize: 14,
-      fontWeight: 'bold',
+      padding: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     content: {
       flex: 1,

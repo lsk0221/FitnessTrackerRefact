@@ -10,7 +10,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  Alert,
   Dimensions,
   TextInput,
   StyleSheet,
@@ -18,11 +17,13 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { useUnit } from '../../../shared/hooks/useUnit';
 import { useProgress } from '../hooks/useProgress';
 import { ProgressChart } from '../components/ProgressChart';
 import { StatsCard } from '../components/StatsCard';
 import { ExerciseSelector } from '../components/ExerciseSelector';
+import ScreenHeader from '../../../shared/components/ScreenHeader';
 // Removed getExerciseName import - using t() function instead
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -35,6 +36,7 @@ const ProgressChartScreen: React.FC = () => {
   const { theme } = useTheme();
   const { currentUnit, formatWeight } = useUnit();
   const { t, i18n } = useTranslation();
+  const { showAlert: showAppAlert, renderAlert } = useAppAlert();
   const {
     selectedMuscleGroup,
     selectedExercise,
@@ -53,7 +55,11 @@ const ProgressChartScreen: React.FC = () => {
     handleTargetWeightSave,
     getAvailableExercisesForMuscleGroup,
     onRefresh,
-  } = useProgress();
+  } = useProgress({
+    showAlert: (title: string, message: string) => {
+      showAppAlert({ title, message });
+    },
+  });
 
   const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
   const [targetWeightInput, setTargetWeightInput] = useState('');
@@ -81,7 +87,10 @@ const ProgressChartScreen: React.FC = () => {
       setTargetWeightInput(targetWeight.toString());
       setShowTargetWeightModal(true);
     } else {
-      Alert.alert(t('common.info'), t('progress.pleaseSelectExercise'));
+      showAlert({
+        title: t('common.info'),
+        message: t('progress.pleaseSelectExercise'),
+      });
     }
   };
 
@@ -128,10 +137,10 @@ const ProgressChartScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('progress.title')}</Text>
-        <Text style={styles.subtitle}>{t('progress.subtitle')}</Text>
-      </View>
+      <ScreenHeader
+        title={t('progress.title')}
+        subtitle={t('progress.subtitle')}
+      />
 
       <ScrollView
         style={styles.content}
@@ -227,6 +236,7 @@ const ProgressChartScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {renderAlert()}
 
       {/* Target Weight Input Modal */}
       <Modal
@@ -270,6 +280,7 @@ const ProgressChartScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      {renderAlert()}
     </View>
   );
 };
@@ -283,24 +294,6 @@ const createStyles = (theme: any) =>
     content: {
       flex: 1,
       padding: 20,
-    },
-    header: {
-      backgroundColor: theme.cardBackground,
-      padding: 20,
-      paddingTop: 40,
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderColor,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: theme.textPrimary,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      marginTop: 4,
     },
     chartContainer: {
       backgroundColor: theme.cardBackground,

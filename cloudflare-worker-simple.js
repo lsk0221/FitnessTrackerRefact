@@ -52,10 +52,23 @@ export default {
           });
       }
     } catch (error) {
-      console.error('Worker error:', error);
-      return new Response(JSON.stringify({ error: error.message }), {
+      console.error('Worker top-level error:', error);
+      console.error('Error stack:', error.stack);
+      
+      const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      };
+      
+      // Always return JSON with CORS headers, even on error
+      return new Response(JSON.stringify({ 
+        error: 'Internal server error',
+        message: error.message || 'An unexpected error occurred',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
   }
@@ -196,6 +209,18 @@ async function handleGetProfile(request, env, corsHeaders) {
     console.log('方法不允許:', request.method);
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  // Check if DB binding exists
+  if (!env || !env.DB) {
+    console.error('Database binding (env.DB) is missing');
+    return new Response(JSON.stringify({ 
+      error: 'Database not configured',
+      message: 'The Cloudflare Worker is missing the DB binding. Please check your wrangler.toml configuration.'
+    }), {
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }

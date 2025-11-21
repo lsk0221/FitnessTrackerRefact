@@ -254,12 +254,12 @@ const SetTracker: React.FC<SetTrackerProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header - Compact */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>{t('liveMode.set')}</Text>
-        <Text style={styles.headerText}>{t('liveMode.reps')}</Text>
-        <Text style={styles.headerText}>{t('liveMode.weight')}</Text>
-        <Text style={styles.headerText}>{t('liveMode.done')}</Text>
+        <Text style={styles.headerText}>{t('liveMode.set') || 'Set'}</Text>
+        <Text style={styles.headerText}>{t('liveMode.reps') || 'Reps'}</Text>
+        <Text style={styles.headerText}>{t('liveMode.weight') || 'Weight'}</Text>
+        <Text style={styles.headerText}>{t('liveMode.done') || 'Done'}</Text>
       </View>
 
       {/* Set rows - render from 1 to templateSets */}
@@ -323,28 +323,30 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     backgroundColor: theme.backgroundColor || theme.cardBackground || '#ffffff',
     borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
+    padding: 12,
+    marginVertical: 4,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingBottom: 12,
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: theme.borderColor || '#e0e0e0',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   headerText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
     color: theme.textSecondary || '#666666',
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   setRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: theme.borderColor || '#e0e0e0',
   },
@@ -353,7 +355,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   setNumber: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: theme.textPrimary || '#333333',
   },
@@ -373,27 +375,27 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'center',
   },
   controlButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: theme.primaryColor || '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   controlButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: theme.backgroundColor || theme.cardBackground || '#ffffff',
   },
   valueButton: {
-    minWidth: 60,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    minWidth: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   valueText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: theme.textPrimary || '#333333',
   },
@@ -407,9 +409,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginTop: 2,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: theme.borderColor || '#e0e0e0',
     alignItems: 'center',
@@ -426,9 +428,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.backgroundColor || theme.cardBackground || '#ffffff',
   },
   addSetButton: {
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: (theme.primaryColor || '#007AFF') + '20',
     alignItems: 'center',

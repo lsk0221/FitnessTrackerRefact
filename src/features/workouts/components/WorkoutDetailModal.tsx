@@ -249,12 +249,13 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         transparent
         animationType="fade"
         onRequestClose={onCloseDetailModal}
+        presentationStyle="overFullScreen"
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalTitleContainer}>
               <Text style={styles.modalTitle}>
-                {selectedDate ? formatDate(selectedDate) : ''}
+                {selectedDate ? formatDate(selectedDate.toISOString()) : ''}
               </Text>
               <TouchableOpacity 
                 style={styles.addButton}
@@ -288,6 +289,7 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         transparent
         animationType="slide"
         onRequestClose={onCloseEditModal}
+        presentationStyle="overFullScreen"
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -351,13 +353,12 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                     
                     if (editForm.muscleGroup) {
                       exercisesToShow = getExercisesForMuscleGroup(
-                        editForm.muscleGroup,
-                        currentLanguage
+                        editForm.muscleGroup
                       );
                     } else {
                       // Show all exercises if no muscle group selected
                       exercisesToShow = muscleGroupsList.flatMap(group =>
-                        getExercisesForMuscleGroup(group, currentLanguage)
+                        getExercisesForMuscleGroup(group)
                       );
                       // Deduplicate
                       exercisesToShow = [...new Set(exercisesToShow)];
