@@ -18,12 +18,8 @@ import { WorkoutIcon, ProgressIcon, ProfileIcon, SettingsIcon, HistoryIcon } fro
 import { useTheme } from '../../shared/contexts/ThemeContext'; // 主題上下文
 import { useCloudflareAuth } from '../../shared/contexts/CloudflareAuthContext'; // 認證上下文
 
-// Profile Screen (placeholder - will be refactored to features/profile)
-// 個人資料畫面（佔位符 - 將重構到 features/profile）
-import { ProfileScreenPlaceholder } from '../../screens/placeholders/ProfileScreenPlaceholder';
-
-// Real Feature Screens - 真實功能畫面
-import { SettingsScreen } from '../../features/profile/screens/SettingsScreen';
+// Settings Module - 設定模組
+import { SettingsScreen, EditProfileScreen, AppSettingsScreen, ChangePasswordScreen } from '../../features/settings';
 
 // Real Feature Screens - 真實功能畫面
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
@@ -56,6 +52,25 @@ const WorkoutStack = () => {
       <Stack.Screen name="WorkoutLobby" component={WorkoutLobbyScreen} />
       <Stack.Screen name="LiveWorkout" component={LiveModeScreen} />
       <Stack.Screen name="QuickLogWorkout" component={QuickLogScreen} />
+    </Stack.Navigator>
+  );
+};
+
+/**
+ * Settings Stack Navigator
+ * 設定堆疊導航器
+ * 
+ * Handles navigation for settings-related screens
+ * 處理設定相關的所有畫面導航
+ */
+const SettingsStack = () => {
+  return (
+    // @ts-ignore - React Navigation v7 type compatibility issue with React 19
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="SettingsMain" component={SettingsScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="AppSettings" component={AppSettingsScreen} />
     </Stack.Navigator>
   );
 };
@@ -120,21 +135,11 @@ const MainApp = () => {
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreenPlaceholder}
+        component={SettingsStack}
         options={{
           title: t('navigation.profile'),
           tabBarIcon: ({ color }) => (
             <ProfileIcon color={color} size={24} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          title: t('navigation.settings'),
-          tabBarIcon: ({ color }) => (
-            <SettingsIcon color={color} size={24} />
           ),
         }}
       />

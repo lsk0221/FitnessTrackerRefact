@@ -233,6 +233,41 @@ export const updateUserProfile = async (profileData: Partial<User>): Promise<Use
 };
 
 /**
+ * Change user password
+ * 修改用戶密碼
+ * 
+ * @param currentPassword - 當前密碼
+ * @param newPassword - 新密碼
+ * @returns Promise<void>
+ */
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
+  try {
+    console.log('開始修改密碼...');
+    
+    // 調用 Cloudflare Auth 服務修改密碼
+    await cloudflareAuth.changePassword(currentPassword, newPassword);
+    console.log('密碼修改成功');
+  } catch (error: any) {
+    console.error('修改密碼失敗:', error);
+    
+    // 處理特定的錯誤情況
+    const errorMessage = error?.message || '';
+    if (errorMessage.includes('current password') || errorMessage.includes('舊密碼') || errorMessage.includes('不正確')) {
+      throw new Error('當前密碼不正確');
+    } else if (errorMessage.includes('too short') || errorMessage.includes('太短')) {
+      throw new Error('新密碼長度不足');
+    } else if (errorMessage.includes('same') || errorMessage.includes('相同')) {
+      throw new Error('新密碼不能與當前密碼相同');
+    }
+    
+    throw error;
+  }
+};
+
+/**
  * Sync workout data to cloud
  * 同步訓練數據到雲端
  */

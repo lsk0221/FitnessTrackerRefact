@@ -17,6 +17,7 @@ const CLOUDFLARE_CONFIG = {
     REFRESH: '/auth/refresh',
     PROFILE: '/auth/profile',
     UPDATE_PROFILE: '/auth/update-profile',
+    CHANGE_PASSWORD: '/auth/change-password',
     SYNC_DATA: '/data/sync',
     GET_DATA: '/data/get'
   }
@@ -227,6 +228,14 @@ export class CloudflareAuth {
     return await this.request(CLOUDFLARE_CONFIG.ENDPOINTS.UPDATE_PROFILE, {
       method: 'PUT',
       body: JSON.stringify(profileData)
+    });
+  }
+
+  // 修改密碼
+  async changePassword(currentPassword, newPassword) {
+    return await this.request(CLOUDFLARE_CONFIG.ENDPOINTS.CHANGE_PASSWORD, {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
     });
   }
 
