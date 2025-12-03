@@ -19,6 +19,8 @@ import {
   syncWorkoutData,
   getWorkoutData,
   initializeAuth,
+  loginWithGoogle,
+  loginWithApple,
   User,
   LoginCredentials,
   RegisterCredentials
@@ -35,6 +37,10 @@ export interface UseAuthReturn {
   signIn: (credentials: LoginCredentials) => Promise<void>;
   signUp: (credentials: RegisterCredentials) => Promise<void>;
   signInLocal: () => Promise<void>;
+  handleGoogleLogin: (
+    idTokenOrCode: string | { code: string; codeVerifier: string; redirectUri: string }
+  ) => Promise<void>;
+  handleAppleLogin: (identityToken: string, fullName?: { givenName?: string; familyName?: string }) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   syncWorkouts: (workouts: any[]) => Promise<void>;
@@ -140,6 +146,65 @@ export const useAuth = (): UseAuthReturn => {
       
     } catch (error) {
       console.error('Local sign in error:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Sign in with Google OAuth
+   * 使用 Google OAuth 登入
+   * 
+   * Supports both:
+   * - Legacy: idToken as string (Implicit Flow)
+   * - New: Authorization Code Flow with { code, codeVerifier, redirectUri }
+   */
+  const handleGoogleLogin = async (
+    idTokenOrCode: string | { code: string; codeVerifier: string; redirectUri: string }
+  ) => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      const result = await loginWithGoogle(idTokenOrCode);
+      console.log('Google sign in successful, setting user:', result.user);
+      setUser(result.user);
+      
+      // Auto sync data after login
+      await autoSyncData(result.user);
+      
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Sign in with Apple OAuth
+   * 使用 Apple OAuth 登入
+   */
+  const handleAppleLogin = async (
+    identityToken: string,
+    fullName?: { givenName?: string; familyName?: string }
+  ) => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      const result = await loginWithApple(identityToken, fullName);
+      console.log('Apple sign in successful, setting user:', result.user);
+      setUser(result.user);
+      
+      // Auto sync data after login
+      await autoSyncData(result.user);
+      
+    } catch (error) {
+      console.error('Apple sign in error:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -280,6 +345,8 @@ export const useAuth = (): UseAuthReturn => {
     signIn,
     signUp,
     signInLocal,
+    handleGoogleLogin,
+    handleAppleLogin,
     logout,
     updateProfile,
     syncWorkouts,

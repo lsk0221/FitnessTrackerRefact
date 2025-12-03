@@ -1,7 +1,95 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 // Export API Base URL for easy access
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://fitness-tracker-api.fitness-tracker.workers.dev';
+
+/**
+ * Google OAuth Client ID (Web)
+ * Reads from environment variable EXPO_PUBLIC_GOOGLE_CLIENT_ID
+ * Falls back to platform-specific Client IDs if Web Client ID is not configured
+ * 
+ * Security: This should NEVER have a hardcoded fallback value.
+ * If missing, it will fallback to iOS/Android Client ID or log a warning.
+ */
+export const GOOGLE_CLIENT_ID = (() => {
+  // Check for Web Client ID first
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+  
+  // Check if at least one Client ID is configured
+  const hasWebClientId = webClientId && webClientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE' && webClientId.trim() !== '';
+  const hasIosClientId = iosClientId && iosClientId !== 'YOUR_GOOGLE_IOS_CLIENT_ID_HERE' && iosClientId.trim() !== '';
+  const hasAndroidClientId = androidClientId && androidClientId !== 'YOUR_GOOGLE_ANDROID_CLIENT_ID_HERE' && androidClientId.trim() !== '';
+  
+  const isGoogleConfigured = hasWebClientId || hasIosClientId || hasAndroidClientId;
+  
+  // If Web Client ID is configured, use it
+  if (hasWebClientId) {
+    return webClientId;
+  }
+  
+  // Fallback to iOS Client ID if available (for backward compatibility)
+  if (hasIosClientId) {
+    if (__DEV__) {
+      console.warn('⚠️ [Config Info]: Using iOS Client ID as fallback for GOOGLE_CLIENT_ID');
+      console.warn('💡 Consider setting EXPO_PUBLIC_GOOGLE_CLIENT_ID for web/universal use');
+    }
+    return iosClientId;
+  }
+  
+  // Fallback to Android Client ID if available
+  if (hasAndroidClientId) {
+    if (__DEV__) {
+      console.warn('⚠️ [Config Info]: Using Android Client ID as fallback for GOOGLE_CLIENT_ID');
+      console.warn('💡 Consider setting EXPO_PUBLIC_GOOGLE_CLIENT_ID for web/universal use');
+    }
+    return androidClientId;
+  }
+  
+  // No Client ID configured at all
+  if (!isGoogleConfigured) {
+    const errorMessage = 'No Google Client ID configured. Please set at least one Client ID in your .env file.';
+    
+    if (__DEV__) {
+      console.error('❌ [Config Error]:', errorMessage);
+      console.error('📝 Please add one of the following to your .env file:');
+      console.error('   - EXPO_PUBLIC_GOOGLE_CLIENT_ID (Web/Universal)');
+      console.error('   - EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID (iOS)');
+      console.error('   - EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID (Android)');
+      console.error('💡 See .env.example for reference');
+    } else {
+      console.warn('⚠️ [Config Warning]:', errorMessage);
+    }
+    
+    return '';
+  }
+  
+  return '';
+})();
+
+/**
+ * Google OAuth iOS Client ID
+ * Reads from environment variable EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
+ * 
+ * Used for native iOS Google Sign-In
+ * Security: This should NEVER have a hardcoded fallback value.
+ */
+export const GOOGLE_IOS_CLIENT_ID = (() => {
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  
+  if (!iosClientId || iosClientId === 'YOUR_GOOGLE_IOS_CLIENT_ID_HERE' || iosClientId.trim() === '') {
+    if (__DEV__) {
+      console.warn('⚠️ [Config Warning]: EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID is not configured. iOS native Google Sign-In may not work.');
+      console.warn('📝 Please add EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID to your .env file for iOS native login');
+    }
+    
+    return '';
+  }
+  
+  return iosClientId;
+})();
 
 // Cloudflare 認證配置
 const CLOUDFLARE_CONFIG = {
@@ -154,13 +242,25 @@ export class CloudflareAuth {
   }
 
   // Google 登入
-  async loginWithGoogle(googleToken) {
-    const data = await this.request(CLOUDFLARE_CONFIG.ENDPOINTS.LOGIN, {
+  // Supports both idToken (legacy) and Authorization Code Flow (code, codeVerifier, redirectUri)
+  async loginWithGoogle(idTokenOrCode) {
+    // Support both legacy idToken string and new code object
+    let requestBody;
+    if (typeof idTokenOrCode === 'string') {
+      // Legacy: idToken as string
+      requestBody = { idToken: idTokenOrCode };
+    } else {
+      // New: Authorization Code Flow
+      requestBody = {
+        code: idTokenOrCode.code,
+        codeVerifier: idTokenOrCode.codeVerifier,
+        redirectUri: idTokenOrCode.redirectUri,
+      };
+    }
+
+    const data = await this.request('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ 
-        provider: 'google',
-        token: googleToken 
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (data.token) {
@@ -172,12 +272,12 @@ export class CloudflareAuth {
   }
 
   // Apple 登入
-  async loginWithApple(appleToken) {
-    const data = await this.request(CLOUDFLARE_CONFIG.ENDPOINTS.LOGIN, {
+  async loginWithApple(identityToken, fullName) {
+    const data = await this.request('/auth/apple', {
       method: 'POST',
       body: JSON.stringify({ 
-        provider: 'apple',
-        token: appleToken 
+        identityToken,
+        user: fullName 
       })
     });
 
@@ -272,9 +372,10 @@ export class CloudflareAuth {
   }
 
   // 本地存儲方法
+  // 使用 SecureStore 存儲 JWT Token（硬體級加密保護）
   async saveToken(token) {
     try {
-      await AsyncStorage.setItem('auth_token', token);
+      await SecureStore.setItemAsync('auth_token', token);
     } catch (error) {
       console.error('Failed to save token:', error);
     }
@@ -282,7 +383,7 @@ export class CloudflareAuth {
 
   async getToken() {
     try {
-      return await AsyncStorage.getItem('auth_token');
+      return await SecureStore.getItemAsync('auth_token');
     } catch (error) {
       console.error('Failed to get token:', error);
       return null;
@@ -291,7 +392,7 @@ export class CloudflareAuth {
 
   async removeToken() {
     try {
-      await AsyncStorage.removeItem('auth_token');
+      await SecureStore.deleteItemAsync('auth_token');
     } catch (error) {
       console.error('Failed to remove token:', error);
     }

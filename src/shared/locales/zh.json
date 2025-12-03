@@ -16,7 +16,8 @@
     "warning": "警告",
     "info": "信息",
     "ok": "確定",
-    "finish": "完成"
+    "finish": "完成",
+    "default": "預設"
   },
   "navigation": {
     "workout": "記錄訓練",
@@ -80,7 +81,39 @@
     "hiit_cardio": {
       "name": "HIIT 有氧爆發",
       "description": "高強度間歇訓練，提升心血管健康。"
-    }
+    },
+    "presets": {
+      "beginner_fullbody_name": "新手器械 - 全身訓練",
+      "beginner_fullbody_desc": "一次練遍全身主要肌群，高效且基礎，適合每週 2-3 練的初學者。",
+      "beginner_push_name": "新手器械 - 推 (Push)",
+      "beginner_push_desc": "專注胸、肩、三頭肌。全固定器械訓練，安全建立推力基礎。",
+      "beginner_pull_name": "新手器械 - 拉 (Pull)",
+      "beginner_pull_desc": "專注背部與二頭肌。改善體態，強化拉力肌群。",
+      "beginner_legs_name": "新手器械 - 腿 (Legs)",
+      "beginner_legs_desc": "專注下肢力量。無需槓鈴，安全有效的腿部訓練。",
+      "adv_chest_name": "進階分化 - 胸部轟炸",
+      "adv_chest_desc": "高強度胸部專項訓練，全方位刺激胸大肌。",
+      "adv_back_name": "進階分化 - 寬厚背肌",
+      "adv_back_desc": "專注於背部寬度與厚度的建立。",
+      "adv_shoulder_name": "進階分化 - 3D 肩部",
+      "adv_shoulder_desc": "針對三角肌前中後束的完整訓練。",
+      "adv_legs_name": "進階分化 - 強力腿部",
+      "adv_legs_desc": "深蹲與硬舉為主，全面強化下肢力量。",
+      "adv_arms_name": "進階分化 - 手臂超級組",
+      "adv_arms_desc": "二頭肌與三頭肌的對抗訓練，極致充血感。",
+      "powerlifting_name": "健力三項 (SBD)",
+      "powerlifting_desc": "專注於深蹲、臥推、硬舉三大核心複合動作，極致發展最大肌力。"
+    },
+    "searchExercises": "搜尋動作",
+    "exercisesAvailable": "個動作可用",
+    "noExercisesFound": "未找到動作",
+    "noExercisesAvailable": "暫無可用動作",
+    "noTemplates": "暫無範本",
+    "selected": "已選擇",
+    "min": "分鐘",
+    "custom": "自訂",
+    "unknownExercise": "未知動作",
+    "unknown": "未知"
   },
   "templateEditor": {
     "title": "範本編輯器",
@@ -119,7 +152,30 @@
     "selectMuscleGroupRequired": "請選擇肌肉群",
     "selectEquipment": "選擇器材",
     "selectEquipmentRequired": "請選擇器材",
-    "error": "錯誤"
+    "restTime": "休息時間",
+    "useGlobal": "使用全局設定",
+    "error": "錯誤",
+    "global": "全局",
+    "exercise": "動作",
+    "exercises": "動作",
+    "exerciseAlreadyAdded": "動作已添加",
+    "exerciseAlreadyAddedMessage": "「{{name}}」已在此範本中。每個動作只能添加一次。",
+    "exercisesAdded": "動作已添加",
+    "exercisesAddedMessage": "已添加 {{count}} 個動作。\n\n已跳過 {{duplicateCount}} 個重複項：{{duplicates}}",
+    "allDuplicates": "全部重複",
+    "allDuplicatesMessage": "所選的 {{count}} 個動作都已在此範本中。",
+    "successfullyAddedExercises": "已成功將 {{count}} 個動作添加到範本。",
+    "failedToLoadExercises": "載入動作失敗",
+    "failedToSearchExercises": "搜尋動作失敗",
+    "failedToFilterExercises": "篩選動作失敗",
+    "pleaseEnterExerciseName": "請輸入動作名稱",
+    "pleaseSelectMuscleGroup": "請選擇肌肉群",
+    "pleaseSelectEquipment": "請選擇器材",
+    "mustBeLoggedIn": "您必須登入才能創建自定義動作",
+    "failedToCreateCustomExercise": "創建自定義動作失敗",
+    "customExerciseCreatedSuccess": "自定義動作「{{name}}」創建成功！",
+    "failedToLoadTemplate": "載入範本失敗",
+    "validationError": "驗證錯誤"
   },
   "workoutLobby": {
     "title": "訓練準備室",
@@ -140,12 +196,14 @@
     "quickLogDesc": "訓練後快速記錄所有數據",
     "batchLog": "批量記錄",
     "loadFailed": "載入訓練計畫失敗",
-    "error": "錯誤"
+    "error": "錯誤",
+    "restTimer": "休息計時器",
+    "restTimerLabel": "休息計時器"
   },
   "liveMode": {
     "title": "即時模式",
     "skip": "跳過",
-    "skipRest": "跳過",
+    "skipRest": "跳過休息",
     "skipExercise": "跳過動作",
     "skipExerciseMessage": "確定要跳過此動作嗎？",
     "restTime": "休息時間",
@@ -197,7 +255,8 @@
     "workoutSaved": "訓練保存成功",
     "savedMessage": "已保存 {{count}} 條訓練記錄",
     "saveFailed": "保存訓練失敗",
-    "exerciseAlreadyExists": "此練習已存在於列表中"
+    "exerciseAlreadyExists": "此練習已存在於列表中",
+    "quickLogWorkout": "快速記錄訓練"
   },
   "progress": {
     "title": "查看進度",
@@ -228,11 +287,22 @@
     "enterTargetWeight": "輸入目標重量",
     "setTargetWeight": "設定目標重量",
     "targetWeightSet": "目標重量已設定",
-    "progressRate": "進步率"
+    "progressRate": "進步率",
+    "selectMuscleGroup": "選擇肌群",
+    "saveTargetWeightFailed": "設定目標重量失敗"
   },
   "profile": {
     "title": "個人資料",
     "subtitle": "您的個人資料信息",
+    "user": "用戶",
+    "streak": "連續天數",
+    "activeDays": "活躍天數",
+    "totalWorkouts": "總訓練次數",
+    "powerliftingTotal": "三項總和 (SBD)",
+    "squat": "深蹲",
+    "bench": "臥推",
+    "deadlift": "硬舉",
+    "notRecorded": "尚未紀錄",
     "trainingStats": "訓練統計",
     "settings": "設定",
     "account": "帳戶",
@@ -346,7 +416,19 @@
     "instruction6": "點擊「載入示例數據」快速體驗所有功能",
     "convertUnit": "轉換重量單位",
     "convertUnitMessage": "轉換完成後需重啟應用以生效",
-    "confirmConvert": "確定轉換"
+    "confirmConvert": "確定轉換",
+    "email": "電子郵件",
+    "userId": "用戶 ID",
+    "clearDataDescription": "這將永久刪除您所有的本地訓練數據、範本和自定義動作。此操作後您將被登出。",
+    "clearDataTitle": "清除所有數據",
+    "clearDataMessage": "確定要刪除所有本地數據嗎？此操作無法撤銷。",
+    "clearDataConfirm": "刪除",
+    "noUserError": "未找到用戶 ID。無法清除數據。",
+    "clearDataSuccess": "成功",
+    "clearDataSuccessMessage": "所有數據已清除。您已被登出。",
+    "clearDataError": "清除所有數據失敗，請重試。",
+    "appSettings": "應用程式設定",
+    "themeNotAvailable": "主題不可用"
   },
   "liveWorkout": {
     "skip": "跳過",
@@ -489,6 +571,34 @@
     "Hypertrophy": "肌肥大",
     "Endurance": "耐力",
     "Custom": "自定義"
+  },
+  "equipment": {
+    "Barbell": "槓鈴",
+    "Dumbbell": "啞鈴",
+    "Machine": "器械",
+    "Cable": "纜繩",
+    "Bodyweight": "自重",
+    "Resistance Band": "彈力帶",
+    "Kettlebell": "壺鈴",
+    "Smith Machine": "史密斯機"
+  },
+  "movementPatterns": {
+    "Horizontal Press": "水平推",
+    "Vertical Press": "垂直推",
+    "Horizontal Pull": "水平拉",
+    "Vertical Pull": "垂直拉",
+    "Squat": "深蹲",
+    "Hip Hinge": "髖關節鉸鏈",
+    "Hinge": "髖關節鉸鏈",
+    "Lunge": "弓步",
+    "Isolation": "孤立動作",
+    "Core": "核心",
+    "Incline Press": "上斜推",
+    "Curl": "彎舉",
+    "Calf Raise": "提踵",
+    "Compound": "複合動作",
+    "Dynamic": "動態動作",
+    "Explosive": "爆發力動作"
   },
   "exercises": {
     "barbell_bench_press": "槓鈴臥推",

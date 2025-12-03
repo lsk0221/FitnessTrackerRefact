@@ -21,6 +21,12 @@ import { useTranslation } from 'react-i18next';
 import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { TemplateExercise } from '../types/template.types';
 
+/**
+ * Default rest time in seconds
+ * 預設休息時間（秒）
+ */
+const DEFAULT_REST_TIME = 90;
+
 interface TemplateEditorFormProps {
   templateName: string;
   templateDescription: string;
@@ -69,35 +75,92 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
   /**
    * Render exercise item
    */
-  const renderExerciseItem = (exercise: TemplateExercise, index: number) => (
-    <View key={exercise.id} style={styles.exerciseCard}>
-      <View style={styles.exerciseHeader}>
-        <Text style={styles.exerciseIndex}>{index + 1}</Text>
-        <View style={styles.exerciseInfo}>
-          <Text style={styles.exerciseName}>{exercise.exercise}</Text>
-          <View style={styles.exerciseDetails}>
-            <Text style={styles.exerciseDetailText}>
-              {exercise.muscleGroup} • {exercise.equipment}
-            </Text>
-            {exercise.movementPattern && (
-              <Text style={styles.exerciseDetailText}>• {exercise.movementPattern}</Text>
-            )}
+  const renderExerciseItem = (exercise: TemplateExercise, index: number) => {
+    // Get translated exercise name
+    // 獲取翻譯後的動作名稱
+    let displayName: string;
+    if (exercise.nameKey) {
+      const translated = t(exercise.nameKey);
+      // If translation key doesn't exist, t() returns the key itself
+      // 如果翻譯鍵不存在，t() 會返回鍵本身
+      displayName = translated === exercise.nameKey 
+        ? (exercise.exercise || exercise.nameKey)
+        : translated;
+    } else {
+      displayName = exercise.exercise || t('templates.unknownExercise') || 'Unknown Exercise';
+    }
+    
+    // Get translated muscle group name
+    // 獲取翻譯後的肌肉群名稱
+    let displayMuscleGroup: string;
+    if (exercise.muscleGroupKey) {
+      const translated = t(exercise.muscleGroupKey);
+      displayMuscleGroup = translated === exercise.muscleGroupKey
+        ? (exercise.muscleGroup || exercise.muscleGroupKey)
+        : translated;
+    } else if (exercise.muscleGroup) {
+      const muscleGroupKey = `muscleGroups.${exercise.muscleGroup}`;
+      const translated = t(muscleGroupKey);
+      displayMuscleGroup = translated === muscleGroupKey
+        ? exercise.muscleGroup
+        : translated;
+    } else {
+      displayMuscleGroup = t('templates.unknown') || 'Unknown';
+    }
+    
+    // Get translated equipment name
+    // 獲取翻譯後的器材名稱
+    let displayEquipment: string;
+    if (exercise.equipment) {
+      const equipmentKey = `equipment.${exercise.equipment}`;
+      const translated = t(equipmentKey);
+      displayEquipment = translated === equipmentKey
+        ? exercise.equipment  // 翻譯不存在，使用原始值
+        : translated;
+    } else {
+      displayEquipment = t('templates.unknown') || 'Unknown';
+    }
+    
+    // Get translated movement pattern name
+    // 獲取翻譯後的動作模式名稱
+    let displayMovementPattern: string | null = null;
+    if (exercise.movementPattern) {
+      const movementKey = `movementPatterns.${exercise.movementPattern}`;
+      const translated = t(movementKey);
+      displayMovementPattern = translated === movementKey
+        ? exercise.movementPattern  // 翻譯不存在，使用原始值
+        : translated;
+    }
+    
+    return (
+      <View key={exercise.id} style={styles.exerciseCard}>
+        <View style={styles.exerciseHeader}>
+          <Text style={styles.exerciseIndex}>{index + 1}</Text>
+          <View style={styles.exerciseInfo}>
+            <Text style={styles.exerciseName}>{displayName}</Text>
+            <View style={styles.exerciseDetails}>
+              <Text style={styles.exerciseDetailText}>
+                {displayMuscleGroup}
+                {displayEquipment ? ` • ${displayEquipment}` : ''}
+                {displayMovementPattern ? ` • ${displayMovementPattern}` : ''}
+              </Text>
+            </View>
           </View>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleRemoveExercise(exercise.id, displayName)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons 
+              name="trash-can-outline" 
+              size={20} 
+              color={theme.textSecondary} 
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleRemoveExercise(exercise.id, exercise.exercise)}
-        >
-          <Text style={styles.deleteButtonText}>🗑️</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Exercise Parameters (Editable) */}
       <View style={styles.exerciseParamsSection}>
-        <Text style={styles.paramsSectionTitle}>
-          {t('templateEditor.defaultParameters')}
-        </Text>
-        
         <View style={styles.paramInputs}>
           {/* Sets Input */}
           <View style={styles.paramInputContainer}>
@@ -189,7 +252,7 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
             
             <View style={styles.restTimeValueContainer}>
               <Text style={styles.restTimeValue}>
-                {exercise.restTime ? `${exercise.restTime}s` : (t('templateEditor.useGlobal') || 'Global')}
+                {(exercise.restTime ?? DEFAULT_REST_TIME)}s
               </Text>
             </View>
             
@@ -214,14 +277,15 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
               activeOpacity={0.7}
             >
               <Text style={styles.clearRestTimeText}>
-                {t('templateEditor.useGlobal') || 'Use Global'}
+                {t('common.default') || 'Default'}: {DEFAULT_REST_TIME}s
               </Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
     </View>
-  );
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -262,7 +326,9 @@ const TemplateEditorForm: React.FC<TemplateEditorFormProps> = ({
             {t('templateEditor.exercises')} <Text style={styles.required}>*</Text>
           </Text>
           <Text style={styles.exerciseCount}>
-            {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'}
+            {exercises.length} {exercises.length === 1 
+              ? t('templateEditor.exercise') || 'exercise' 
+              : t('templateEditor.exercises') || 'exercises'}
           </Text>
         </View>
 
@@ -308,13 +374,13 @@ const createStyles = (theme: any) =>
       flex: 1,
     },
     section: {
-      marginBottom: 24,
+      marginBottom: 16,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 12,
+      marginBottom: 8,
     },
     sectionTitle: {
       fontSize: 18,
@@ -329,7 +395,7 @@ const createStyles = (theme: any) =>
       fontSize: 16,
       fontWeight: '600',
       color: theme.textPrimary,
-      marginBottom: 8,
+      marginBottom: 4,
     },
     required: {
       color: theme.errorColor || '#F44336',
@@ -339,7 +405,7 @@ const createStyles = (theme: any) =>
       borderWidth: 1,
       borderColor: theme.borderColor,
       borderRadius: 8,
-      padding: 12,
+      padding: 10,
       fontSize: 16,
       color: theme.textPrimary,
     },
@@ -360,12 +426,12 @@ const createStyles = (theme: any) =>
       fontWeight: 'bold',
     },
     exerciseList: {
-      gap: 12,
+      gap: 8,
     },
     exerciseCard: {
       backgroundColor: theme.cardBackground,
       borderRadius: 12,
-      padding: 16,
+      padding: 12,
       borderWidth: 1,
       borderColor: theme.borderColor,
     },
@@ -387,7 +453,7 @@ const createStyles = (theme: any) =>
       fontSize: 16,
       fontWeight: 'bold',
       color: theme.textPrimary,
-      marginBottom: 6,
+      marginBottom: 4,
     },
     exerciseDetails: {
       flexDirection: 'row',
@@ -399,18 +465,10 @@ const createStyles = (theme: any) =>
       color: theme.textSecondary,
     },
     exerciseParamsSection: {
-      marginTop: 12,
-      paddingTop: 12,
+      marginTop: 8,
+      paddingTop: 8,
       borderTopWidth: 1,
       borderTopColor: theme.borderColor,
-    },
-    paramsSectionTitle: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.textSecondary,
-      marginBottom: 8,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
     paramInputs: {
       flexDirection: 'row',
@@ -422,7 +480,7 @@ const createStyles = (theme: any) =>
     paramInputLabel: {
       fontSize: 11,
       color: theme.textSecondary,
-      marginBottom: 4,
+      marginBottom: 2,
       fontWeight: '500',
     },
     paramInput: {
@@ -431,21 +489,21 @@ const createStyles = (theme: any) =>
       borderColor: theme.borderColor,
       borderRadius: 6,
       paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingVertical: 4,
       fontSize: 14,
       color: theme.textPrimary,
       textAlign: 'center',
     },
     restTimeContainer: {
-      marginTop: 12,
-      paddingTop: 12,
+      marginTop: 8,
+      paddingTop: 8,
       borderTopWidth: 1,
       borderTopColor: theme.borderColor,
     },
     restTimeLabel: {
       fontSize: 11,
       color: theme.textSecondary,
-      marginBottom: 8,
+      marginBottom: 6,
       fontWeight: '500',
     },
     restTimeControls: {
@@ -492,9 +550,8 @@ const createStyles = (theme: any) =>
     deleteButton: {
       padding: 8,
       marginLeft: 8,
-    },
-    deleteButtonText: {
-      fontSize: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     emptyState: {
       alignItems: 'center',

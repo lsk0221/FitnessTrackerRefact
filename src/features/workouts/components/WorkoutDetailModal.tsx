@@ -91,7 +91,33 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     });
     return filtered.map(ex => {
       const nameKey = ex.nameKey || ex.name || '';
-      return nameKey.startsWith('exercises.') ? nameKey : `exercises.${nameKey}`;
+      if (!nameKey) return '';
+      
+      // Check if already in Chinese (contains Chinese characters)
+      // 檢查是否已經是中文（包含中文字符）
+      const hasChineseChars = /[\u4e00-\u9fa5]/.test(nameKey);
+      if (hasChineseChars) {
+        // Already in Chinese, return as is (don't try to translate)
+        // 已經是中文，直接返回（不嘗試翻譯）
+        return nameKey;
+      }
+      
+      // If already a translation key, return as is
+      // 如果已經是翻譯鍵，直接返回
+      if (nameKey.startsWith('exercises.')) {
+        return nameKey;
+      }
+      
+      // Convert to snake_case and add prefix
+      // 轉換為 snake_case 並添加前綴
+      const snakeCase = nameKey
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+      
+      if (!snakeCase) return nameKey;
+      
+      return `exercises.${snakeCase}`;
     });
   };
 
@@ -390,7 +416,40 @@ const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                             },
                           ]}
                         >
-                          {exercise}
+                          {(() => {
+                            // exercise is a translation key (e.g., "exercises.overhead_tricep_extension")
+                            // or could be a Chinese name or raw English string
+                            // exercise 是翻譯鍵（例如 "exercises.overhead_tricep_extension"）
+                            // 或者可能是中文名稱或原始英文字符串
+                            if (!exercise) return '';
+                            
+                            // Check if already in Chinese
+                            // 檢查是否已經是中文
+                            const hasChineseChars = /[\u4e00-\u9fa5]/.test(exercise);
+                            if (hasChineseChars) {
+                              return exercise;
+                            }
+                            
+                            // If it's already a translation key, translate it
+                            // 如果已經是翻譯鍵，翻譯它
+                            if (exercise.startsWith('exercises.')) {
+                              const translated = t(exercise);
+                              return translated === exercise ? exercise.replace('exercises.', '') : translated;
+                            }
+                            
+                            // Otherwise, try to convert and translate
+                            // 否則，嘗試轉換並翻譯
+                            const snakeCase = exercise
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, '_')
+                              .replace(/^_+|_+$/g, '');
+                            
+                            if (!snakeCase) return exercise;
+                            
+                            const translationKey = `exercises.${snakeCase}`;
+                            const translated = t(translationKey);
+                            return translated === translationKey ? exercise : translated;
+                          })()}
                         </Text>
                       </TouchableOpacity>
                     ));

@@ -285,7 +285,9 @@ const WorkoutLobbyScreen: React.FC<WorkoutLobbyScreenProps> = ({
 
       {/* Rest Time Setting */}
       <View style={styles.restTimeContainer}>
-        <Text style={styles.restTimeLabel}>Rest Timer: {defaultRestTime}s</Text>
+        <Text style={styles.restTimeLabel}>
+          {t('workoutLobby.restTimer') || 'Rest Timer'}: {defaultRestTime}s
+        </Text>
         <View style={styles.restTimeControls}>
           <TouchableOpacity
             style={styles.restTimeButton}

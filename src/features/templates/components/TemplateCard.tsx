@@ -8,6 +8,8 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+// @ts-ignore - Expo vector icons types
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { WorkoutTemplate, TemplateExercise } from '../types/template.types';
 
@@ -70,7 +72,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             {template.nameKey ? t(template.nameKey) : (template.name || '')}
           </Text>
           {(template.difficultyKey || template.difficulty) && (
-            <View style={[styles.difficultyBadge, getDifficultyColor(template.difficulty || 'Intermediate')]}>
+            <View style={[styles.difficultyBadge, getDifficultyColor(template.difficultyKey, template.difficulty)]}>
               <Text style={styles.difficultyText}>
                 {template.difficultyKey ? t(template.difficultyKey) : (template.difficulty ? t(`difficulties.${template.difficulty}`) : '')}
               </Text>
@@ -88,8 +90,13 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   e.stopPropagation();
                   onEdit();
                 }}
+                activeOpacity={0.7}
               >
-                <Text style={styles.actionIcon}>✏️</Text>
+                <MaterialCommunityIcons 
+                  name="pencil-outline" 
+                  size={20} 
+                  color={theme.textPrimary} 
+                />
               </TouchableOpacity>
             )}
             {onDelete && (
@@ -99,8 +106,13 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   e.stopPropagation();
                   onDelete();
                 }}
+                activeOpacity={0.7}
               >
-                <Text style={styles.actionIcon}>🗑️</Text>
+                <MaterialCommunityIcons 
+                  name="trash-can-outline" 
+                  size={20} 
+                  color={theme.textSecondary} 
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -124,7 +136,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         {template.estimatedTime && (
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>{t('templates.estimatedTime')}: </Text>
-            <Text style={styles.infoValue}>{template.estimatedTime} min</Text>
+            <Text style={styles.infoValue}>
+              {template.estimatedTime} {t('templates.min') || 'min'}
+            </Text>
           </View>
         )}
 
@@ -145,8 +159,14 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             e.stopPropagation();
             onCopy();
           }}
+          activeOpacity={0.8}
         >
-          <Text style={styles.copyButtonText}>📋 {t('templates.copyTemplate')}</Text>
+          <MaterialCommunityIcons 
+            name="content-copy" 
+            size={16} 
+            color="#FFFFFF" 
+          />
+          <Text style={styles.copyButtonText}>{t('templates.copyTemplate')}</Text>
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -155,20 +175,68 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
 
 /**
  * Get difficulty badge color
+ * 獲取難度標籤顏色
+ * 
+ * Enhanced matching logic with case-insensitive comparison
+ * 增強的匹配邏輯，支持大小寫不敏感比較
  */
 const getDifficultyColor = (
-  difficulty: WorkoutTemplate['difficulty']
+  difficultyKey?: string,
+  difficulty?: WorkoutTemplate['difficulty']
 ): { backgroundColor: string } => {
-  switch (difficulty) {
-    case 'Beginner':
-      return { backgroundColor: '#4CAF50' };
-    case 'Intermediate':
-      return { backgroundColor: '#FF9800' };
-    case 'Advanced':
-      return { backgroundColor: '#F44336' };
-    default:
-      return { backgroundColor: '#9E9E9E' };
+  // Extract difficulty level from key or use direct value
+  // 從 key 中提取難度等級或使用直接值
+  let level = '';
+  
+  if (difficultyKey) {
+    // Extract from key like "difficulties.Beginner" or "difficulties.Intermediate"
+    // 從類似 "difficulties.Beginner" 或 "difficulties.Intermediate" 的 key 中提取
+    const parts = difficultyKey.split('.');
+    level = parts[parts.length - 1] || '';
+  } else if (difficulty) {
+    level = difficulty;
   }
+  
+  // Convert to lowercase for case-insensitive comparison
+  // 統一轉為小寫以進行大小寫不敏感比較
+  const normalizedLevel = (level || '').toLowerCase().trim();
+  
+  // Match with enhanced logic - check in order of specificity
+  // 增強的匹配邏輯 - 按特定性順序檢查
+  
+  // Beginner (初級) - Green
+  // Check for beginner first
+  if (normalizedLevel === 'beginner' || 
+      normalizedLevel.includes('beginner') || 
+      normalizedLevel.includes('novice') || 
+      normalizedLevel === '初級' ||
+      normalizedLevel.includes('初級')) {
+    return { backgroundColor: '#4CAF50' }; // Green - 綠色
+  }
+  
+  // Advanced (高級) - Red
+  // Check for advanced before intermediate to avoid false matches
+  // 先檢查 advanced 避免誤匹配
+  if (normalizedLevel === 'advanced' || 
+      normalizedLevel.includes('advanced') || 
+      normalizedLevel.includes('expert') || 
+      normalizedLevel === '高級' ||
+      normalizedLevel.includes('高級')) {
+    return { backgroundColor: '#F44336' }; // Red - 紅色
+  }
+  
+  // Intermediate (中級) - Orange
+  // Check intermediate last
+  if (normalizedLevel === 'intermediate' || 
+      normalizedLevel.includes('intermediate') || 
+      normalizedLevel === '中級' ||
+      normalizedLevel.includes('中級')) {
+    return { backgroundColor: '#FF9800' }; // Orange - 橙色
+  }
+  
+  // Default: Grey for unknown difficulty
+  // 預設：未知難度顯示灰色
+  return { backgroundColor: '#9E9E9E' };
 };
 
 /**
@@ -244,10 +312,9 @@ const createStyles = (theme: any) =>
       marginLeft: 8,
     },
     actionButton: {
-      padding: 4,
-    },
-    actionIcon: {
-      fontSize: 16,
+      padding: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     description: {
       fontSize: 14,
@@ -291,7 +358,10 @@ const createStyles = (theme: any) =>
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 8,
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
     },
     copyButtonText: {
       color: '#FFFFFF',

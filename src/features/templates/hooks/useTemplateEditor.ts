@@ -219,10 +219,10 @@ export const useTemplateEditor = (
             nameKey: exercise.nameKey || (exercise.exercise?.startsWith('exercises.') ? exercise.exercise : undefined),
             muscleGroupKey: exercise.muscleGroupKey || (exercise.muscleGroup?.startsWith('muscleGroups.') ? exercise.muscleGroup : undefined),
             // Legacy fields for backward compatibility
-            exercise: exercise.nameKey?.replace('exercises.', '') || exercise.exercise || exercise.name || 'Unknown Exercise',
-            muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscleGroup || exercise.muscle_group || 'Unknown',
-            movementPattern: exercise.movementPattern || exercise.movement_pattern || 'Unknown',
-            equipment: exercise.equipment || 'Unknown',
+            exercise: exercise.nameKey?.replace('exercises.', '') || exercise.exercise || exercise.name || t('templates.unknownExercise') || 'Unknown Exercise',
+            muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscleGroup || exercise.muscle_group || t('templates.unknown') || 'Unknown',
+            movementPattern: exercise.movementPattern || exercise.movement_pattern || t('templates.unknown') || 'Unknown',
+            equipment: exercise.equipment || t('templates.unknown') || 'Unknown',
             tags: exercise.tags || [],
             sets: exercise.sets,
             reps: exercise.reps,
@@ -259,7 +259,7 @@ export const useTemplateEditor = (
         }
       } catch (err) {
         console.error('Error initializing template:', err);
-        setError('Failed to load template');
+        setError(t('templateEditor.failedToLoadTemplate') || 'Failed to load template');
       } finally {
         setLoading(false);
       }
@@ -280,7 +280,7 @@ export const useTemplateEditor = (
       }
     } catch (err) {
       console.error('Error loading exercises:', err);
-      showAlert('Error', 'Failed to load exercises');
+      showAlert(t('common.error') || 'Error', t('templateEditor.failedToLoadExercises') || 'Failed to load exercises');
     }
   }, [userId, showAlert]);
 
@@ -320,7 +320,7 @@ export const useTemplateEditor = (
       }
     } catch (err) {
       console.error('Error searching exercises:', err);
-      showAlert('Error', 'Failed to search exercises');
+      showAlert(t('common.error') || 'Error', t('templateEditor.failedToSearchExercises') || 'Failed to search exercises');
     }
   }, [loadAvailableExercises, showAlert]);
 
@@ -338,7 +338,7 @@ export const useTemplateEditor = (
       }
     } catch (err) {
       console.error('Error filtering exercises:', err);
-      showAlert('Error', 'Failed to filter exercises');
+      showAlert(t('common.error') || 'Error', t('templateEditor.failedToFilterExercises') || 'Failed to filter exercises');
     }
   }, [showAlert]);
 
@@ -353,39 +353,39 @@ export const useTemplateEditor = (
   ) => {
     try {
       if (!exerciseName || exerciseName.trim() === '') {
-        showAlert('Error', 'Please enter an exercise name');
+        showAlert(t('common.error') || 'Error', t('templateEditor.pleaseEnterExerciseName') || 'Please enter an exercise name');
         return;
       }
 
       if (!muscleGroup || muscleGroup.trim() === '') {
-        showAlert('Error', 'Please select a muscle group');
+        showAlert(t('common.error') || 'Error', t('templateEditor.pleaseSelectMuscleGroup') || 'Please select a muscle group');
         return;
       }
 
       if (!equipment || equipment.trim() === '') {
-        showAlert('Error', 'Please select equipment');
+        showAlert(t('common.error') || 'Error', t('templateEditor.pleaseSelectEquipment') || 'Please select equipment');
         return;
       }
 
       if (!userId) {
-        showAlert('Error', 'You must be logged in to create custom exercises');
+        showAlert(t('common.error') || 'Error', t('templateEditor.mustBeLoggedIn') || 'You must be logged in to create custom exercises');
         return;
       }
 
       const result = await saveCustomExercise(exerciseName, muscleGroup, equipment, userId);
       
       if (!result.success) {
-        showAlert('Error', result.error || 'Failed to create custom exercise');
+        showAlert(t('common.error') || 'Error', result.error || t('templateEditor.failedToCreateCustomExercise') || 'Failed to create custom exercise');
         return;
       }
 
       // Reload exercises to include the new custom exercise
       await loadAvailableExercises();
 
-      showSuccess(`Custom exercise "${exerciseName}" created successfully!`);
+      showSuccess(t('templateEditor.customExerciseCreatedSuccess', { name: exerciseName }) || `Custom exercise "${exerciseName}" created successfully!`);
     } catch (err) {
       console.error('Error creating custom exercise:', err);
-      showAlert('Error', 'Failed to create custom exercise');
+      showAlert(t('common.error') || 'Error', t('templateEditor.failedToCreateCustomExercise') || 'Failed to create custom exercise');
     }
   }, [userId, loadAvailableExercises, showAlert, showSuccess]);
 
@@ -402,9 +402,10 @@ export const useTemplateEditor = (
     );
 
     if (isDuplicate) {
+      const exerciseName = exercise.name || exercise.nameKey || t('templates.unknownExercise') || 'Unknown Exercise';
       showAlert(
-        'Exercise Already Added',
-        `"${exercise.name || exercise.nameKey}" is already in this template. Each exercise can only be added once.`
+        t('templateEditor.exerciseAlreadyAdded') || 'Exercise Already Added',
+        t('templateEditor.exerciseAlreadyAddedMessage', { name: exerciseName }) || `"${exerciseName}" is already in this template. Each exercise can only be added once.`
       );
       return;
     }
@@ -414,10 +415,10 @@ export const useTemplateEditor = (
       nameKey: exercise.nameKey,
       muscleGroupKey: exercise.muscleGroupKey,
       // Legacy fields for backward compatibility
-      exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || 'Unknown Exercise',
-      muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || 'Unknown',
-      movementPattern: exercise.movement_pattern || 'Unknown',
-      equipment: exercise.equipment || 'Unknown',
+      exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || t('templates.unknownExercise') || 'Unknown Exercise',
+      muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || t('templates.unknown') || 'Unknown',
+      movementPattern: exercise.movement_pattern || t('templates.unknown') || 'Unknown',
+      equipment: exercise.equipment || t('templates.unknown') || 'Unknown',
       tags: exercise.tags || [],
     };
 
@@ -442,7 +443,7 @@ export const useTemplateEditor = (
       // Check for duplicates (by nameKey or name)
       const exerciseKey = exercise.nameKey || exercise.name;
       if (currentExerciseKeys.has(exerciseKey)) {
-        duplicates.push(exercise.name || exercise.nameKey || 'Unknown');
+        duplicates.push(exercise.name || exercise.nameKey || t('templates.unknown') || 'Unknown');
         return;
       }
 
@@ -452,10 +453,10 @@ export const useTemplateEditor = (
         nameKey: exercise.nameKey,
         muscleGroupKey: exercise.muscleGroupKey,
         // Legacy fields for backward compatibility
-        exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || 'Unknown Exercise',
-        muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || 'Unknown',
-        movementPattern: exercise.movement_pattern || 'Unknown',
-        equipment: exercise.equipment || 'Unknown',
+        exercise: exercise.nameKey?.replace('exercises.', '') || exercise.name || t('templates.unknownExercise') || 'Unknown Exercise',
+        muscleGroup: exercise.muscleGroupKey?.replace('muscleGroups.', '') || exercise.muscle_group || t('templates.unknown') || 'Unknown',
+        movementPattern: exercise.movement_pattern || t('templates.unknown') || 'Unknown',
+        equipment: exercise.equipment || t('templates.unknown') || 'Unknown',
         tags: exercise.tags || [],
       };
 
@@ -471,15 +472,19 @@ export const useTemplateEditor = (
     // Show feedback
     if (newExercises.length > 0 && duplicates.length > 0) {
       showAlert(
-        'Exercises Added',
-        `Added ${newExercises.length} exercise(s).\n\n${duplicates.length} duplicate(s) skipped: ${duplicates.join(', ')}`
+        t('templateEditor.exercisesAdded') || 'Exercises Added',
+        t('templateEditor.exercisesAddedMessage', { 
+          count: newExercises.length, 
+          duplicateCount: duplicates.length, 
+          duplicates: duplicates.join(', ') 
+        }) || `Added ${newExercises.length} exercise(s).\n\n${duplicates.length} duplicate(s) skipped: ${duplicates.join(', ')}`
       );
     } else if (newExercises.length > 0) {
-      showSuccess(`Successfully added ${newExercises.length} exercise(s) to template.`);
+      showSuccess(t('templateEditor.successfullyAddedExercises', { count: newExercises.length }) || `Successfully added ${newExercises.length} exercise(s) to template.`);
     } else if (duplicates.length > 0) {
       showAlert(
-        'All Duplicates',
-        `All ${duplicates.length} selected exercise(s) are already in this template.`
+        t('templateEditor.allDuplicates') || 'All Duplicates',
+        t('templateEditor.allDuplicatesMessage', { count: duplicates.length }) || `All ${duplicates.length} selected exercise(s) are already in this template.`
       );
     }
 
@@ -605,7 +610,7 @@ export const useTemplateEditor = (
     // Validate template
     const validation = validateTemplate();
     if (!validation.isValid) {
-      showAlert('Validation Error', validation.errors.join('\n'));
+      showAlert(t('templateEditor.validationError') || 'Validation Error', validation.errors.join('\n'));
       return { success: false };
     }
 
@@ -647,11 +652,13 @@ export const useTemplateEditor = (
       }
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to save template');
+        throw new Error(result.error || t('templateEditor.failedToSaveTemplate') || 'Failed to save template');
       }
 
       const successMessage =
-        mode === 'edit' ? 'Template updated successfully' : 'Template created successfully';
+        mode === 'edit' 
+          ? (t('templateEditor.templateUpdated') || 'Template updated successfully')
+          : (t('templateEditor.templateCreated') || 'Template created successfully');
       showSuccess(successMessage);
 
       return {
@@ -659,9 +666,9 @@ export const useTemplateEditor = (
         templateId: result.data?.id,
       };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save template';
+      const errorMessage = err instanceof Error ? err.message : (t('templateEditor.failedToSaveTemplate') || 'Failed to save template');
       setError(errorMessage);
-      showAlert('Error', errorMessage);
+      showAlert(t('common.error') || 'Error', errorMessage);
       console.error('Error saving template:', err);
       return { success: false };
     } finally {

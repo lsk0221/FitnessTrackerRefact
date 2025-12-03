@@ -149,7 +149,7 @@ const TemplatesScreen: React.FC = () => {
         rightComponent={
           <TouchableOpacity style={styles.createButton} onPress={handleCreateTemplate} activeOpacity={0.7}>
             <MaterialCommunityIcons name="plus" size={28} color={theme.primaryColor} />
-          </TouchableOpacity>
+        </TouchableOpacity>
         }
       />
 

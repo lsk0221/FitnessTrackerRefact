@@ -156,14 +156,31 @@ const WorkoutList: React.FC<WorkoutListProps> = ({
                 // 翻譯原始英文動作名稱
                 const exerciseName = workout.exercise || '';
                 if (!exerciseName) return '';
+                
+                // Check if the name is already in Chinese (contains Chinese characters)
+                // 檢查名稱是否已經是中文（包含中文字符）
+                const hasChineseChars = /[\u4e00-\u9fa5]/.test(exerciseName);
+                if (hasChineseChars) {
+                  // Already in Chinese, return as is
+                  // 已經是中文，直接返回
+                  return exerciseName;
+                }
+                
                 // Convert to snake_case for translation key
+                // 轉換為 snake_case 以生成翻譯鍵
                 const snakeCase = exerciseName
                   .toLowerCase()
                   .replace(/[^a-z0-9]+/g, '_')
                   .replace(/^_+|_+$/g, '');
+                
+                // If snakeCase is empty after conversion, return original name
+                // 如果轉換後 snakeCase 為空，返回原始名稱
+                if (!snakeCase) return exerciseName;
+                
                 const translationKey = `exercises.${snakeCase}`;
                 const translated = t(translationKey);
                 // If translation fails (returns the key itself), use original name
+                // 如果翻譯失敗（返回鍵本身），使用原始名稱
                 return translated === translationKey ? exerciseName : translated;
               })()}
             </Text>

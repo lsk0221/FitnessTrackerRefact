@@ -6,21 +6,40 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { formatWeight } from '../../../shared/services/utils/weightFormatter';
-import type { ProgressStats } from '../types/progress.types';
+import type { ProgressStats, ChartType } from '../types/progress.types';
 
 interface StatsCardProps {
   stats: ProgressStats;
   theme: any;
   currentUnit: string;
   t: (key: string) => string;
+  isWeightlessExercise?: boolean; // Whether selected exercise is weightless (Cardio)
+  chartType?: ChartType; // Current chart type
 }
 
 /**
  * Stats Card Component
  * 顯示訓練統計數據的卡片
  */
-export const StatsCard: React.FC<StatsCardProps> = ({ stats, theme, currentUnit, t }) => {
+export const StatsCard: React.FC<StatsCardProps> = ({ 
+  stats, 
+  theme, 
+  currentUnit, 
+  t,
+  isWeightlessExercise = false,
+  chartType = 'weight'
+}) => {
   const styles = createStyles(theme);
+
+  // For weightless exercises in volume mode, display reps instead of weight
+  // 對於無重量動作在容量模式下，顯示次數而非重量
+  const showReps = isWeightlessExercise && chartType === 'volume';
+  const displayValue = showReps 
+    ? Math.round(stats.maxWeight).toString() // maxWeight is actually max volume (total reps) for weightless exercises
+    : formatWeight(stats.maxWeight, currentUnit);
+  const displayUnit = showReps 
+    ? (t('workout.reps') || t('quickLog.reps') || '次')
+    : (currentUnit === 'kg' ? t('units.kg') : t('units.lb'));
 
   return (
     <View style={styles.container}>
@@ -33,8 +52,8 @@ export const StatsCard: React.FC<StatsCardProps> = ({ stats, theme, currentUnit,
       {/* Highest Record */}
       <View style={styles.statCard}>
         <View style={styles.statValueContainer}>
-          <Text style={styles.statValue}>{formatWeight(stats.maxWeight, currentUnit)}</Text>
-          <Text style={styles.statUnit}>{currentUnit === 'kg' ? t('units.kg') : t('units.lb')}</Text>
+          <Text style={styles.statValue}>{displayValue}</Text>
+          <Text style={styles.statUnit}>{displayUnit}</Text>
         </View>
         <Text style={styles.statLabel}>{t('progress.highestRecord')}</Text>
       </View>

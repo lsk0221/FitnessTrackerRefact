@@ -144,9 +144,22 @@ export const getSmartSwapSuggestions = async (
       const muscleGroupFromKey = ex.muscleGroupKey?.replace('muscleGroups.', '') || '';
       const muscleGroupName = muscleGroupFromKey || ex.muscle_group || 'Unknown';
       
+      // Ensure nameKey doesn't have double prefix
+      // 確保 nameKey 沒有重複前綴
+      let finalNameKey = ex.nameKey;
+      if (!finalNameKey) {
+        // Check if exerciseName already has exercises. prefix
+        // 檢查 exerciseName 是否已經有 exercises. 前綴
+        if (exerciseName.startsWith('exercises.')) {
+          finalNameKey = exerciseName;
+        } else {
+          finalNameKey = `exercises.${exerciseName.toLowerCase().replace(/\s+/g, '_')}`;
+        }
+      }
+      
       return {
         id: ex.id || `unknown_${Date.now()}`,
-        nameKey: ex.nameKey || `exercises.${exerciseName.toLowerCase().replace(/\s+/g, '_')}`,
+        nameKey: finalNameKey,
         muscleGroupKey: ex.muscleGroupKey || `muscleGroups.${muscleGroupName}`,
         exercise: exerciseName,
         name: exerciseName,
@@ -300,7 +313,15 @@ export const getExercisesForMuscleGroup = async (
       id: ex.id,
       exercise: ex.nameKey?.replace('exercises.', '') || ex.name || '',
       name: ex.nameKey?.replace('exercises.', '') || ex.name || '',
-      nameKey: ex.nameKey || `exercises.${ex.name || ''}`,
+      nameKey: (() => {
+        if (ex.nameKey) return ex.nameKey;
+        const name = ex.name || '';
+        if (!name) return '';
+        // Check if name already has exercises. prefix
+        // 檢查名稱是否已經有 exercises. 前綴
+        if (name.startsWith('exercises.')) return name;
+        return `exercises.${name}`;
+      })(),
       muscleGroup: ex.muscleGroupKey?.replace('muscleGroups.', '') || ex.muscle_group || '',
       muscleGroupKey: ex.muscleGroupKey || `muscleGroups.${ex.muscle_group || ''}`,
       movementPattern: ex.movement_pattern,
@@ -342,7 +363,15 @@ export const searchExercisesForWorkout = async (
       id: ex.id,
       exercise: ex.nameKey?.replace('exercises.', '') || ex.name || '',
       name: ex.nameKey?.replace('exercises.', '') || ex.name || '',
-      nameKey: ex.nameKey || `exercises.${ex.name || ''}`,
+      nameKey: (() => {
+        if (ex.nameKey) return ex.nameKey;
+        const name = ex.name || '';
+        if (!name) return '';
+        // Check if name already has exercises. prefix
+        // 檢查名稱是否已經有 exercises. 前綴
+        if (name.startsWith('exercises.')) return name;
+        return `exercises.${name}`;
+      })(),
       muscleGroup: ex.muscleGroupKey?.replace('muscleGroups.', '') || ex.muscle_group || '',
       muscleGroupKey: ex.muscleGroupKey || `muscleGroups.${ex.muscle_group || ''}`,
       movementPattern: ex.movement_pattern,

@@ -6,3 +6,16 @@ compatibility_date = "2025-09-09"
 binding = "DB"
 database_name = "fitness-tracker-db"
 database_id = "b0e87d36-d7a8-4d00-b7e7-f113d578f24b"
+
+# OAuth Configuration
+# Set these using: wrangler secret put GOOGLE_CLIENT_ID
+#                  wrangler secret put GOOGLE_IOS_CLIENT_ID
+#                  wrangler secret put GOOGLE_ANDROID_CLIENT_ID
+# Or add to .dev.vars for local development:
+# GOOGLE_CLIENT_ID=your-google-web-client-id-here
+# GOOGLE_IOS_CLIENT_ID=your-google-ios-client-id-here
+# GOOGLE_ANDROID_CLIENT_ID=your-google-android-client-id-here
+# [vars]
+# GOOGLE_CLIENT_ID = "your-google-web-client-id-here"
+# GOOGLE_IOS_CLIENT_ID = "your-google-ios-client-id-here"
+# GOOGLE_ANDROID_CLIENT_ID = "your-google-android-client-id-here"

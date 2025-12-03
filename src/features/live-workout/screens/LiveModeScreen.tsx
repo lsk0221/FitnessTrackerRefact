@@ -17,8 +17,8 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // @ts-ignore - Expo vector icons types
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -64,7 +64,7 @@ const LiveModeScreen: React.FC<LiveModeScreenProps> = ({
     console.error('LiveModeScreen: theme is undefined');
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Theme not available</Text>
+        <Text>{t('settings.themeNotAvailable') || 'Theme not available'}</Text>
       </View>
     );
   }

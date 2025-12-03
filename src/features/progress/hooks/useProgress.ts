@@ -3,7 +3,7 @@
  * 進度追蹤 Hook - 管理進度圖表的狀態和邏輯
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/hooks/useAuth';
@@ -243,10 +243,32 @@ export const useProgress = (callbacks?: UseProgressCallbacks) => {
     // Try to find the original English name by matching translated names
     // 嘗試通過匹配翻譯後的名稱來找到原始英文名稱
     for (const performedEx of performedExercisesList) {
+      if (!performedEx.name) continue;
+      
+      // Check if already in Chinese
+      // 檢查是否已經是中文
+      const hasChineseChars = /[\u4e00-\u9fa5]/.test(performedEx.name);
+      if (hasChineseChars) {
+        if (performedEx.name === exercise) {
+          originalExerciseName = performedEx.name;
+          break;
+        }
+        continue;
+      }
+      
       const snakeCase = performedEx.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '');
+      
+      if (!snakeCase) {
+        if (performedEx.name === exercise) {
+          originalExerciseName = performedEx.name;
+          break;
+        }
+        continue;
+      }
+      
       const translationKey = `exercises.${snakeCase}`;
       const translated = t(translationKey);
       if (translated === exercise || performedEx.name === exercise) {
@@ -331,14 +353,30 @@ export const useProgress = (callbacks?: UseProgressCallbacks) => {
         // 動作名稱是原始英文字符串，轉換為翻譯鍵以顯示
         const exerciseName = exercise.name || '';
         if (exerciseName) {
+          // Check if already in Chinese
+          // 檢查是否已經是中文
+          const hasChineseChars = /[\u4e00-\u9fa5]/.test(exerciseName);
+          if (hasChineseChars) {
+            performedExercisesForGroup.push(exerciseName);
+            return; // Use return instead of continue in forEach callback
+          }
+          
           // Convert to snake_case for translation key
+          // 轉換為 snake_case 以生成翻譯鍵
           const snakeCase = exerciseName
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '_')
             .replace(/^_+|_+$/g, '');
+          
+          if (!snakeCase) {
+            performedExercisesForGroup.push(exerciseName);
+            return; // Use return instead of continue in forEach callback
+          }
+          
           const translationKey = `exercises.${snakeCase}`;
           const translated = t(translationKey);
           // Use translated name if available, otherwise use original
+          // 如果翻譯可用則使用翻譯，否則使用原始名稱
           const displayName = translated === translationKey ? exerciseName : translated;
           performedExercisesForGroup.push(displayName);
         }
@@ -456,6 +494,39 @@ export const useProgress = (callbacks?: UseProgressCallbacks) => {
     loadProgressData();
   }, [loadProgressData]);
 
+  /**
+   * 判斷選中的練習是否是無重量動作（Cardio 或 Bodyweight）
+   * Check if selected exercise is weightless (Cardio or Bodyweight)
+   */
+  const isWeightlessExercise = useMemo(() => {
+    if (!selectedExercise) return false;
+    
+    // Find the exercise in performedExercisesList to get its muscleGroup
+    // 在 performedExercisesList 中查找動作以獲取其 muscleGroup
+    const exerciseData = performedExercisesList.find(
+      ex => ex.name === selectedExercise
+    );
+    
+    if (!exerciseData) return false;
+    
+    // Check if muscleGroup is Cardio
+    // 檢查 muscleGroup 是否為 Cardio
+    const mainMuscleGroup = getMainMuscleGroup(exerciseData.muscleGroup);
+    return mainMuscleGroup === 'Cardio';
+  }, [selectedExercise, performedExercisesList]);
+
+  // Auto-switch to volume chart type for weightless exercises
+  // 為無重量動作自動切換到容量圖表類型
+  useEffect(() => {
+    if (isWeightlessExercise && chartType === 'weight') {
+      // Only auto-switch if user hasn't manually interacted
+      // 僅在用戶未手動交互時自動切換
+      if (!hasManualInteraction.current) {
+        setChartType('volume');
+      }
+    }
+  }, [isWeightlessExercise, chartType]);
+
   // Load target weight when exercise or chart type changes
   useEffect(() => {
     loadTargetWeightForExercise(selectedExercise, chartType);
@@ -531,6 +602,7 @@ export const useProgress = (callbacks?: UseProgressCallbacks) => {
     isLoading,
     refreshing,
     muscleGroupsList, // Dynamic muscle groups list
+    isWeightlessExercise, // Whether selected exercise is weightless (Cardio)
 
     // Actions
     handleMuscleGroupSelect,

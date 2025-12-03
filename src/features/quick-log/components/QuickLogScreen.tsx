@@ -24,11 +24,11 @@ import {
   TextInput,
   Modal,
   FlatList,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 // @ts-ignore - Expo vector icons types
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -307,7 +307,9 @@ const QuickLogScreen: React.FC<QuickLogScreenProps> = ({ navigation, route }) =>
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons name="plus-circle" size={20} color={theme.primaryColor} />
-            <Text style={styles.addSetButtonText}>Add Set</Text>
+            <Text style={styles.addSetButtonText}>
+              {t('quickLog.addSet') || 'Add Set'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -325,7 +327,9 @@ const QuickLogScreen: React.FC<QuickLogScreenProps> = ({ navigation, route }) =>
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <MaterialCommunityIcons name="arrow-left" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>快速記錄</Text>
+          <Text style={styles.headerTitle}>
+            {t('quickLog.title') || 'Quick Log'}
+          </Text>
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => setShowAddExerciseModal(true)}
@@ -339,7 +343,7 @@ const QuickLogScreen: React.FC<QuickLogScreenProps> = ({ navigation, route }) =>
         {template && (
           <View style={styles.templateHeader}>
             <Text style={styles.templateName}>
-              {template.name || template.nameKey || 'Quick Log Workout'}
+              {template.name || template.nameKey || t('quickLog.quickLogWorkout') || 'Quick Log Workout'}
             </Text>
           </View>
         )}

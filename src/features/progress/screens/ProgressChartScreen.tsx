@@ -48,6 +48,7 @@ const ProgressChartScreen: React.FC = () => {
     isLoading,
     refreshing,
     muscleGroupsList,
+    isWeightlessExercise,
     handleMuscleGroupSelect,
     handleExerciseSelect,
     handleTimeRangeSelect,
@@ -154,6 +155,7 @@ const ProgressChartScreen: React.FC = () => {
           chartType={chartType}
           availableExercises={getAvailableExercisesForMuscleGroup()}
           muscleGroupsList={muscleGroupsList}
+          isWeightlessExercise={isWeightlessExercise}
           onMuscleGroupSelect={handleMuscleGroupSelect}
           onExerciseSelect={handleExerciseSelect}
           onTimeRangeSelect={handleTimeRangeSelect}
@@ -168,7 +170,36 @@ const ProgressChartScreen: React.FC = () => {
           <View style={styles.chartHeader}>
             <View style={styles.chartTitleContainer}>
               <Text style={styles.chartTitle}>
-                {selectedExercise ? t(selectedExercise) : t('progress.selectAction')}
+                {selectedExercise ? (() => {
+                  // selectedExercise is raw English string, convert to translation key
+                  // selectedExercise 是原始英文字符串，轉換為翻譯鍵
+                  if (!selectedExercise) return t('progress.selectAction');
+                  
+                  // Check if already in Chinese
+                  // 檢查是否已經是中文
+                  const hasChineseChars = /[\u4e00-\u9fa5]/.test(selectedExercise);
+                  if (hasChineseChars) return selectedExercise;
+                  
+                  // Check if already a translation key
+                  // 檢查是否已經是翻譯鍵
+                  if (selectedExercise.startsWith('exercises.')) {
+                    const translated = t(selectedExercise);
+                    return translated === selectedExercise ? selectedExercise : translated;
+                  }
+                  
+                  // Convert to snake_case for translation key
+                  // 轉換為 snake_case 以生成翻譯鍵
+                  const snakeCase = selectedExercise
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '_')
+                    .replace(/^_+|_+$/g, '');
+                  
+                  if (!snakeCase) return selectedExercise;
+                  
+                  const translationKey = `exercises.${snakeCase}`;
+                  const translated = t(translationKey);
+                  return translated === translationKey ? selectedExercise : translated;
+                })() : t('progress.selectAction')}
               </Text>
 
               {/* Improvement Display */}
@@ -210,7 +241,14 @@ const ProgressChartScreen: React.FC = () => {
         </View>
 
         {/* Statistics Cards */}
-        <StatsCard stats={stats} theme={theme} currentUnit={currentUnit} t={t} />
+        <StatsCard 
+          stats={stats} 
+          theme={theme} 
+          currentUnit={currentUnit} 
+          t={t}
+          isWeightlessExercise={isWeightlessExercise}
+          chartType={chartType}
+        />
 
         {/* Target Weight Section */}
         <View style={styles.targetWeightContainer}>
@@ -249,12 +287,31 @@ const ProgressChartScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
               {t('progress.setTarget')} {selectedExercise ? (() => {
-                // selectedExercise is raw English string, convert to translation key
-                // selectedExercise 是原始英文字符串，轉換為翻譯鍵
+                // selectedExercise might be translation key, translated name, or raw English string
+                // selectedExercise 可能是翻譯鍵、翻譯後的名稱或原始英文字符串
+                if (!selectedExercise) return '';
+                
+                // Check if already a translation key (e.g., "exercises.overhead_tricep_extension")
+                // 檢查是否已經是翻譯鍵（例如 "exercises.overhead_tricep_extension"）
+                if (selectedExercise.startsWith('exercises.')) {
+                  const translated = t(selectedExercise);
+                  return translated === selectedExercise ? selectedExercise.replace('exercises.', '') : translated;
+                }
+                
+                // Check if already in Chinese
+                // 檢查是否已經是中文
+                const hasChineseChars = /[\u4e00-\u9fa5]/.test(selectedExercise);
+                if (hasChineseChars) return selectedExercise;
+                
+                // Convert to snake_case for translation key
+                // 轉換為 snake_case 以生成翻譯鍵
                 const snakeCase = selectedExercise
                   .toLowerCase()
                   .replace(/[^a-z0-9]+/g, '_')
                   .replace(/^_+|_+$/g, '');
+                
+                if (!snakeCase) return selectedExercise;
+                
                 const translationKey = `exercises.${snakeCase}`;
                 const translated = t(translationKey);
                 return translated === translationKey ? selectedExercise : translated;

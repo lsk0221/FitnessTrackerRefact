@@ -300,6 +300,84 @@ export const getWorkoutData = async (): Promise<any[]> => {
 };
 
 /**
+ * Sign in with Google OAuth
+ * 使用 Google OAuth 登入
+ * 
+ * Supports both:
+ * - Legacy: idToken as string (Implicit Flow)
+ * - New: Authorization Code Flow with { code, codeVerifier, redirectUri }
+ * 
+ * @param idTokenOrCode - Google ID Token (string) or Authorization Code object
+ * @returns Promise<AuthResult> - 包含用戶資料和令牌的結果
+ */
+export const loginWithGoogle = async (
+  idTokenOrCode: string | { code: string; codeVerifier: string; redirectUri: string }
+): Promise<AuthResult> => {
+  try {
+    if (typeof idTokenOrCode === 'string') {
+      // Legacy: idToken flow
+      console.log('開始 Google 登入 (idToken)...');
+      console.log('Google ID Token:', idTokenOrCode.substring(0, 20) + '...');
+    } else {
+      // New: Authorization Code Flow
+      console.log('開始 Google 登入 (Authorization Code Flow)...');
+      console.log('Authorization Code:', idTokenOrCode.code.substring(0, 20) + '...');
+      console.log('Redirect URI:', idTokenOrCode.redirectUri);
+    }
+    
+    // Call backend API to exchange code (if needed) and authenticate user
+    const result = await cloudflareAuth.loginWithGoogle(idTokenOrCode);
+    console.log('Google 登入成功，用戶資料:', result.user);
+    
+    // Save user data to local storage
+    await AsyncStorage.setItem('user_profile', JSON.stringify(result.user));
+    console.log('用戶資料已保存到本地存儲');
+    
+    return {
+      user: result.user,
+      token: result.token,
+    };
+  } catch (error) {
+    console.error('Google 登入失敗:', error);
+    throw error;
+  }
+};
+
+/**
+ * Sign in with Apple OAuth
+ * 使用 Apple OAuth 登入
+ * 
+ * @param identityToken - Apple Identity Token
+ * @param fullName - Optional user full name from Apple
+ * @returns Promise<AuthResult> - 包含用戶資料和令牌的結果
+ */
+export const loginWithApple = async (
+  identityToken: string,
+  fullName?: { givenName?: string; familyName?: string }
+): Promise<AuthResult> => {
+  try {
+    console.log('開始 Apple 登入...');
+    console.log('Apple Identity Token:', identityToken.substring(0, 20) + '...');
+    
+    // Call backend API to verify Apple token and authenticate user
+    const result = await cloudflareAuth.loginWithApple(identityToken, fullName);
+    console.log('Apple 登入成功，用戶資料:', result.user);
+    
+    // Save user data to local storage
+    await AsyncStorage.setItem('user_profile', JSON.stringify(result.user));
+    console.log('用戶資料已保存到本地存儲');
+    
+    return {
+      user: result.user,
+      token: result.token,
+    };
+  } catch (error) {
+    console.error('Apple 登入失敗:', error);
+    throw error;
+  }
+};
+
+/**
  * Initialize authentication state
  * 初始化認證狀態
  */

@@ -2,6 +2,7 @@
   "expo": {
     "name": "FitnessTrackerSimple",
     "slug": "FitnessTrackerSimple",
+    "owner": "lsk0221",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,10 +15,22 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fitnesstracker.simple"
+      "bundleIdentifier": "com.lsk0221.fitnesstracker",
+      "scheme": "fitnesstracker",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "fitnesstracker",
+              "com.googleusercontent.apps.910699452659-qh1kp3sv547rsrhbf5pfocc5uunvu1rs"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.fitnesstracker.simple",
+      "scheme": "fitnesstracker",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -30,6 +43,11 @@
     "plugins": [
       "expo-localization",
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fca47d98-df4d-40ee-9f60-d6d0f8d889ab"
+      }
+    }
   }
 }

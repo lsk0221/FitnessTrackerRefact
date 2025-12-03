@@ -17,6 +17,7 @@ interface ExerciseSelectorProps {
   chartType: ChartType;
   availableExercises: string[];
   muscleGroupsList: string[]; // Dynamic muscle groups list
+  isWeightlessExercise?: boolean; // Whether selected exercise is weightless (Cardio)
   onMuscleGroupSelect: (muscleGroup: string) => void;
   onExerciseSelect: (exercise: string) => void;
   onTimeRangeSelect: (timeRange: TimeRange) => void;
@@ -37,6 +38,7 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   chartType,
   availableExercises,
   muscleGroupsList,
+  isWeightlessExercise = false,
   onMuscleGroupSelect,
   onExerciseSelect,
   onTimeRangeSelect,
@@ -94,12 +96,31 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
         >
           <Text style={[styles.selectionButtonText, !selectedMuscleGroup && styles.disabledButtonText]}>
             {selectedExercise ? (() => {
-              // selectedExercise is raw English string, convert to translation key
-              // selectedExercise 是原始英文字符串，轉換為翻譯鍵
+              // selectedExercise might be translation key, translated name, or raw English string
+              // selectedExercise 可能是翻譯鍵、翻譯後的名稱或原始英文字符串
+              if (!selectedExercise) return t('progress.selectExercise');
+              
+              // Check if already a translation key (e.g., "exercises.overhead_tricep_extension")
+              // 檢查是否已經是翻譯鍵（例如 "exercises.overhead_tricep_extension"）
+              if (selectedExercise.startsWith('exercises.')) {
+                const translated = t(selectedExercise);
+                return translated === selectedExercise ? selectedExercise.replace('exercises.', '') : translated;
+              }
+              
+              // Check if already in Chinese
+              // 檢查是否已經是中文
+              const hasChineseChars = /[\u4e00-\u9fa5]/.test(selectedExercise);
+              if (hasChineseChars) return selectedExercise;
+              
+              // Convert to snake_case for translation key
+              // 轉換為 snake_case 以生成翻譯鍵
               const snakeCase = selectedExercise
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '_')
                 .replace(/^_+|_+$/g, '');
+              
+              if (!snakeCase) return selectedExercise;
+              
               const translationKey = `exercises.${snakeCase}`;
               const translated = t(translationKey);
               return translated === translationKey ? selectedExercise : translated;
@@ -111,10 +132,19 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
       {/* Chart Type Selection */}
       <View style={styles.chartTypeContainer}>
         <TouchableOpacity
-          style={[styles.chartTypeButton, chartType === 'weight' && styles.chartTypeButtonActive]}
-          onPress={() => onChartTypeSelect('weight')}
+          style={[
+            styles.chartTypeButton, 
+            chartType === 'weight' && styles.chartTypeButtonActive,
+            isWeightlessExercise && styles.chartTypeButtonDisabled
+          ]}
+          onPress={() => !isWeightlessExercise && onChartTypeSelect('weight')}
+          disabled={isWeightlessExercise}
         >
-          <Text style={[styles.chartTypeButtonText, chartType === 'weight' && styles.chartTypeButtonTextActive]}>
+          <Text style={[
+            styles.chartTypeButtonText, 
+            chartType === 'weight' && styles.chartTypeButtonTextActive,
+            isWeightlessExercise && styles.chartTypeButtonTextDisabled
+          ]}>
             {t('progress.weight')}
           </Text>
         </TouchableOpacity>
@@ -189,18 +219,55 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('workout.selectExercise')}</Text>
             <ScrollView style={styles.modalScrollView}>
-              {availableExercises.map(exercise => (
-                <TouchableOpacity
-                  key={exercise}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    onExerciseSelect(exercise);
-                    setShowExerciseModal(false);
-                  }}
-                >
-                  <Text style={styles.modalOptionText}>{exercise}</Text>
-                </TouchableOpacity>
-              ))}
+              {availableExercises.map(exercise => {
+                // Get display name - exercise might be translated name, original name, or translation key
+                // 獲取顯示名稱 - exercise 可能是翻譯後的名稱、原始名稱或翻譯鍵
+                let displayName: string;
+                
+                if (!exercise) {
+                  displayName = '';
+                } else if (exercise.startsWith('exercises.')) {
+                  // Already a translation key
+                  // 已經是翻譯鍵
+                  const translated = t(exercise);
+                  displayName = translated === exercise ? exercise.replace('exercises.', '') : translated;
+                } else {
+                  // Check if already in Chinese
+                  // 檢查是否已經是中文
+                  const hasChineseChars = /[\u4e00-\u9fa5]/.test(exercise);
+                  if (hasChineseChars) {
+                    displayName = exercise;
+                  } else {
+                    // Try to translate from English name
+                    // 嘗試從英文名稱翻譯
+                    const snakeCase = exercise
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '_')
+                      .replace(/^_+|_+$/g, '');
+                    
+                    if (snakeCase) {
+                      const translationKey = `exercises.${snakeCase}`;
+                      const translated = t(translationKey);
+                      displayName = translated === translationKey ? exercise : translated;
+                    } else {
+                      displayName = exercise;
+                    }
+                  }
+                }
+                
+                return (
+                  <TouchableOpacity
+                    key={exercise}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      onExerciseSelect(exercise);
+                      setShowExerciseModal(false);
+                    }}
+                  >
+                    <Text style={styles.modalOptionText}>{displayName}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
             <TouchableOpacity style={styles.closeButton} onPress={() => setShowExerciseModal(false)}>
               <Text style={styles.closeButtonText}>{t('common.close')}</Text>
@@ -269,6 +336,14 @@ const createStyles = (theme: any) =>
     },
     chartTypeButtonTextActive: {
       color: '#ffffff',
+    },
+    chartTypeButtonDisabled: {
+      opacity: 0.5,
+      backgroundColor: theme.cardBackground,
+    },
+    chartTypeButtonTextDisabled: {
+      color: theme.textSecondary,
+      opacity: 0.5,
     },
     timeRangeButton: {
       backgroundColor: theme.cardBackground,

@@ -721,7 +721,10 @@ const CUSTOM_EXERCISES_KEY = '@fitness_tracker:custom_exercises';
  */
 const getCustomExercisesKey = (userId?: string): string => {
   if (!userId) {
-    console.warn('getCustomExercisesKey called without userId, using default key');
+    // This is expected during app initialization before user login
+    // Using default key for unauthenticated state is a valid use case
+    // 這在應用初始化時（用戶登入前）是預期的行為
+    // 未認證狀態下使用默認 key 是有效的用例
     return CUSTOM_EXERCISES_KEY;
   }
   return `${CUSTOM_EXERCISES_KEY}_${userId}`;

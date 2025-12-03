@@ -23,12 +23,16 @@ export interface UserProfile {
 }
 
 export interface ProfileStats {
-  totalWorkouts: number;
-  currentStreak: number;
-  totalVolume: number; // in kg
-  level: number;
-  nextLevelProgress: number; // 0-100
-  levelTitle: string;
+  streak: number; // Current consecutive days
+  totalWorkouts: number; // Total workout sessions
+  totalActiveDays: number; // Total unique training days
+  level: number; // User level
+  big3: {
+    squat: number;    // Squat 1RM (or max record)
+    bench: number;    // Bench Press 1RM
+    deadlift: number; // Deadlift 1RM
+    total: number;    // S+B+D total
+  };
 }
 
 export interface UseProfileReturn {
@@ -99,53 +103,95 @@ const calculateStreak = (workouts: Workout[]): number => {
 };
 
 /**
- * Calculate total volume
- * 計算總重量
+ * Calculate total active days (unique training dates)
+ * 計算總活躍天數（不重複日期）
  */
-const calculateTotalVolume = (workouts: Workout[]): number => {
-  return workouts.reduce((total, workout) => {
-    // weight is already in kg internally
-    const volume = (workout.weight || 0) * (workout.sets || 0) * (workout.reps || 0);
-    return total + volume;
-  }, 0);
+const calculateTotalActiveDays = (workouts: Workout[]): number => {
+  const uniqueDates = new Set(
+    workouts.map(w => {
+      const date = new Date(w.date);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    })
+  );
+  return uniqueDates.size;
 };
 
 /**
- * Get level title based on level
- * 根據等級獲取稱號
+ * Calculate Big 3 (Squat, Bench Press, Deadlift) max weights
+ * 計算健力三項（深蹲、臥推、硬舉）最大重量
  */
-const getLevelTitle = (level: number): string => {
-  if (level < 5) return '初學者';
-  if (level < 10) return '健身愛好者';
-  if (level < 20) return '訓練達人';
-  if (level < 30) return '健身專家';
-  if (level < 50) return '健身大師';
-  return '傳奇健身者';
+const calculateBig3 = (workouts: Workout[]): { squat: number; bench: number; deadlift: number; total: number } => {
+  let maxSquat = 0;
+  let maxBench = 0;
+  let maxDeadlift = 0;
+
+  workouts.forEach(workout => {
+    const exerciseName = (workout.exercise || '').toLowerCase().trim();
+    const weight = workout.weight || 0;
+
+    if (weight <= 0) return; // Skip zero or negative weights
+
+    // Match Squat variations (case-insensitive)
+    // 匹配深蹲變體（不區分大小寫）
+    if (exerciseName.includes('squat') && 
+        !exerciseName.includes('jump') && 
+        !exerciseName.includes('split') &&
+        weight > maxSquat) {
+      maxSquat = weight;
+    }
+
+    // Match Bench Press variations (case-insensitive)
+    // 匹配臥推變體（不區分大小寫）
+    if ((exerciseName.includes('bench') && exerciseName.includes('press')) || 
+        exerciseName.includes('bench press') ||
+        exerciseName === 'barbell bench press' ||
+        exerciseName === 'bench press' ||
+        (exerciseName.includes('bench') && !exerciseName.includes('incline') && !exerciseName.includes('decline'))) {
+      if (weight > maxBench) {
+        maxBench = weight;
+      }
+    }
+
+    // Match Deadlift variations (case-insensitive)
+    // 匹配硬舉變體（不區分大小寫），排除羅馬尼亞硬舉
+    if (exerciseName.includes('deadlift') && 
+        !exerciseName.includes('romanian') && 
+        !exerciseName.includes('stiff') &&
+        weight > maxDeadlift) {
+      maxDeadlift = weight;
+    }
+  });
+
+  return {
+    squat: maxSquat,
+    bench: maxBench,
+    deadlift: maxDeadlift,
+    total: maxSquat + maxBench + maxDeadlift,
+  };
 };
 
 /**
- * Calculate level and progress
- * 計算等級和進度
+ * Calculate user level based on total workouts
+ * 根據總訓練次數計算用戶等級
  */
-const calculateLevel = (totalWorkouts: number): { level: number; progress: number } => {
-  const workoutsPerLevel = 10;
-  const level = Math.floor(totalWorkouts / workoutsPerLevel) + 1;
-  const workoutsInCurrentLevel = totalWorkouts % workoutsPerLevel;
-  const progress = (workoutsInCurrentLevel / workoutsPerLevel) * 100;
-  
-  return { level, progress };
+const calculateLevel = (totalWorkouts: number): number => {
+  return Math.floor(totalWorkouts / 10) + 1;
 };
 
 export const useProfile = (): UseProfileReturn => {
   const { user, refreshAuthState } = useCloudflareAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<ProfileStats>({
+    streak: 0,
     totalWorkouts: 0,
-    currentStreak: 0,
-    totalVolume: 0,
+    totalActiveDays: 0,
     level: 1,
-    nextLevelProgress: 0,
-    levelTitle: '初學者',
+    big3: {
+      squat: 0,
+      bench: 0,
+      deadlift: 0,
+      total: 0,
+    },
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -258,18 +304,17 @@ export const useProfile = (): UseProfileReturn => {
 
       const workouts = result.data;
       const totalWorkouts = workouts.length;
-      const currentStreak = calculateStreak(workouts);
-      const totalVolume = calculateTotalVolume(workouts);
-      const { level, progress } = calculateLevel(totalWorkouts);
-      const levelTitle = getLevelTitle(level);
+      const streak = calculateStreak(workouts);
+      const totalActiveDays = calculateTotalActiveDays(workouts);
+      const big3 = calculateBig3(workouts);
+      const level = calculateLevel(totalWorkouts);
 
       setStats({
+        streak,
         totalWorkouts,
-        currentStreak,
-        totalVolume,
+        totalActiveDays,
         level,
-        nextLevelProgress: progress,
-        levelTitle,
+        big3,
       });
     } catch (err) {
       console.error('計算統計數據失敗:', err);

@@ -165,13 +165,13 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
     // 獲取顯示名稱 - 優先使用翻譯鍵，否則使用名稱
     const displayName = item.nameKey 
       ? t(item.nameKey) 
-      : (item.name || 'Unknown Exercise');
+      : (item.name || t('templates.unknownExercise') || 'Unknown Exercise');
     
     // Get muscle group display name
     // 獲取肌肉群顯示名稱
     const displayMuscleGroup = item.muscleGroupKey
       ? t(item.muscleGroupKey)
-      : (item.muscle_group || 'Unknown');
+      : (item.muscle_group || t('templates.unknown') || 'Unknown');
     
     return (
       <TouchableOpacity
@@ -189,7 +189,9 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
             </Text>
             {item.isCustom && (
               <View style={styles.customBadge}>
-                <Text style={styles.customBadgeText}>CUSTOM</Text>
+                <Text style={styles.customBadgeText}>
+                  {t('templates.custom') || 'CUSTOM'}
+                </Text>
               </View>
             )}
           </View>
@@ -433,7 +435,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           <View style={styles.footerContent}>
             <Text style={styles.exerciseCount}>
               {selectedExercises.length > 0
-                ? `${selectedExercises.length} selected`
+                ? `${selectedExercises.length} ${t('templates.selected') || 'selected'}`
                 : `${exercises.length} ${t('templates.exercisesAvailable')}`}
             </Text>
             {selectedExercises.length > 0 && onConfirmSelection && (
