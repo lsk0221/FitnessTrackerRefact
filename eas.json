@@ -12,7 +12,10 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "910699452659-2m0bt0cfgqrpen4oj9svhc8jlksuk00g.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {

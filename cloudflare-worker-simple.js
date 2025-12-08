@@ -182,6 +182,28 @@ async function handleLogin(request, env, corsHeaders) {
       });
     }
 
+    // === 透明密碼遷移邏輯 ===
+    // 檢查是否為舊格式 (SHA-256 hex string 通常不含冒號，而我們的新格式是 salt:hash)
+    if (!user.password.includes(':')) {
+      console.log('檢測到舊格式密碼，正在執行透明遷移...', user.email);
+      try {
+        // 使用當前密碼生成新的 PBKDF2 雜湊（這會自動包含 Salt）
+        const newHashedPassword = await hashPassword(password);
+        
+        // 更新資料庫中的密碼
+        await env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
+          .bind(newHashedPassword, user.id)
+          .run();
+        
+        console.log(`用戶 ${user.email} 密碼已透明遷移至 PBKDF2`);
+      } catch (migrationError) {
+        // 遷移失敗不應阻擋用戶登入，僅記錄錯誤
+        console.error('密碼遷移失敗:', migrationError);
+        console.error('遷移失敗的用戶:', user.email);
+      }
+    }
+    // ===================
+
     // 生成 JWT token
     const token = generateJWT(user.id, user.email, env);
     
@@ -245,20 +267,20 @@ async function handleGetProfile(request, env, corsHeaders) {
     }
 
     const token = authHeader.substring(7); // 移除 'Bearer ' 前綴
-    console.log('提取的 token:', token);
+    // 敏感信息：已移除 token 日志
     
     const payload = verifyJWT(token, env);
-    console.log('JWT payload:', payload);
+    // 敏感信息：已移除 payload 日志
     
     if (!payload) {
-      console.log('JWT 驗證失敗');
+      // JWT 驗證失敗（非敏感，保留）
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('查詢用戶 ID:', payload.sub);
+    // 敏感信息：已移除用戶 ID 日志
     
     // 從數據庫獲取用戶資料
     const user = await env.DB.prepare(
@@ -462,7 +484,7 @@ async function handleGoogleLogin(request, env, corsHeaders) {
     // Phase 1: 如果收到 code，先交換為 id_token (Authorization Code Flow)
     // Phase 1: If code is received, exchange it for id_token first (Authorization Code Flow)
     if (code && !idToken) {
-      console.log('🔄 Exchanging authorization code for id_token...');
+      // 敏感信息：已移除 OAuth token 交換過程日志
       
       if (!codeVerifier) {
         return new Response(JSON.stringify({ error: 'Missing codeVerifier (PKCE required)' }), {
@@ -482,7 +504,7 @@ async function handleGoogleLogin(request, env, corsHeaders) {
         });
       }
       
-      console.log('🔄 redirectUri value:', redirectUri || '(empty - OK for iOS native)');
+      // 敏感信息：已移除 redirectUri 日志
 
       // Determine which Client ID to use based on redirectUri
       // 根據 redirectUri 決定使用哪個 Client ID
@@ -501,7 +523,7 @@ async function handleGoogleLogin(request, env, corsHeaders) {
       } else {
         // redirectUri 為空字串，使用 iOS Client ID
         // redirectUri is empty string, use iOS Client ID
-        console.log('🔄 Empty redirectUri detected, using iOS Client ID');
+        // 敏感信息：已移除 redirectUri 检测日志
       }
 
       if (!clientIdToUse) {
@@ -525,8 +547,7 @@ async function handleGoogleLogin(request, env, corsHeaders) {
       let lastError = null;
       let successfulUri = null;
 
-      console.log('🔄 Starting token exchange with fallback mechanism...');
-      console.log('🔄 Candidate URIs:', candidateUris.map(uri => uri || '(empty/undefined)').join(', '));
+      // 敏感信息：已移除 token 交換過程詳細日志
 
       // 嘗試每個候選 URI
       // Try each candidate URI
@@ -538,7 +559,7 @@ async function handleGoogleLogin(request, env, corsHeaders) {
             ? 'empty string' 
             : currentUri;
 
-        console.log(`🔄 Attempt ${i + 1}/${candidateUris.length}: Using redirect_uri = ${uriDescription}`);
+        // 敏感信息：已移除 token 交換嘗試詳細日志
 
         try {
           // Build request body
@@ -554,13 +575,11 @@ async function handleGoogleLogin(request, env, corsHeaders) {
           if (currentUri !== undefined) {
             if (currentUri && currentUri.trim() !== '') {
               tokenParams.append('redirect_uri', currentUri);
-              console.log(`  ✅ Added redirect_uri: ${currentUri}`);
-            } else {
-              console.log(`  ⚠️ redirect_uri is empty string (not adding to request)`);
+              // 敏感信息：已移除 redirect_uri 添加日志
             }
-          } else {
-            console.log(`  ⚠️ redirect_uri is undefined (not including in request)`);
+            // 敏感信息：已移除 redirect_uri 狀態日志
           }
+          // 敏感信息：已移除 redirect_uri 狀態日志
 
           const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
@@ -632,8 +651,8 @@ async function handleGoogleLogin(request, env, corsHeaders) {
     // Phase 2: 驗證 id_token
     // Phase 2: Validate id_token
 
-    // Build list of allowed Client IDs (Web, iOS, Android)
-    // 構建允許的 Client ID 列表（Web、iOS、Android）
+    // Build list of allowed Client IDs (Web, iOS, Android Dev, Android Prod)
+    // 構建允許的 Client ID 列表（Web、iOS、Android 開發版、Android 正式版）
     const allowedClientIds = [];
     if (env.GOOGLE_CLIENT_ID) {
       allowedClientIds.push(env.GOOGLE_CLIENT_ID);
@@ -643,6 +662,9 @@ async function handleGoogleLogin(request, env, corsHeaders) {
     }
     if (env.GOOGLE_ANDROID_CLIENT_ID) {
       allowedClientIds.push(env.GOOGLE_ANDROID_CLIENT_ID);
+    }
+    if (env.GOOGLE_ANDROID_CLIENT_ID_PROD) {
+      allowedClientIds.push(env.GOOGLE_ANDROID_CLIENT_ID_PROD);
     }
 
     // Check if at least one Client ID is configured
@@ -834,7 +856,7 @@ async function validateGoogleToken(idToken, allowedClientIds) {
       return null;
     }
     
-    console.log('Google token validated successfully for Client ID:', tokenInfo.aud);
+    // 敏感信息：已移除 Google token 驗證成功日志
     
     // Extract user information
     return {
@@ -1085,9 +1107,9 @@ function generateJWT(userId, email, env) {
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   
   // 從環境變數讀取密鑰（實際應用中應該使用 HMAC-SHA256）
-  const secret = env.JWT_SECRET || 'fitness-tracker-secret-key-v2'; // Fallback for development
-  if (!env.JWT_SECRET) {
-    console.warn('警告：JWT_SECRET 環境變數未設置，使用預設值（僅用於開發）');
+  const secret = env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("Critical Security Error: JWT_SECRET is not configured in environment variables. Please set JWT_SECRET in your Cloudflare Worker environment variables.");
   }
   const signature = base64UrlEncode(secret + encodedHeader + encodedPayload);
   
@@ -1234,11 +1256,11 @@ async function handleGetData(request, env, corsHeaders) {
 // 驗證 JWT Token
 function verifyJWT(token, env) {
   try {
-    console.log('驗證 JWT token:', token ? token.substring(0, 20) + '...' : 'null');
+    // 敏感信息：已移除 token 日志
     
     const parts = token.split('.');
     if (parts.length !== 3) {
-      console.log('JWT 格式錯誤：部分數量不正確');
+      // JWT 格式錯誤（非敏感，保留）
       return null;
     }
     
@@ -1257,19 +1279,20 @@ function verifyJWT(token, env) {
     
     // 解碼 payload
     const decodedPayload = JSON.parse(base64UrlDecode(payload));
-    console.log('解碼的 payload - userId:', decodedPayload.sub, 'email:', decodedPayload.email);
+    // 敏感信息：已移除 payload 解碼日志（userId, email）
     
     // 檢查過期時間
     const currentTime = Math.floor(Date.now() / 1000);
     if (decodedPayload.exp && decodedPayload.exp < currentTime) {
-      console.log('Token 已過期:', new Date(decodedPayload.exp * 1000), 'current:', new Date());
+      // Token 已過期（非敏感，但已移除詳細時間日志）
       return null;
     }
     
     // 從環境變數讀取密鑰並驗證簽名（簡化版本 - 實際應用中應該重新生成簽名並比較）
-    const secret = env.JWT_SECRET || 'fitness-tracker-secret-key-v2'; // Fallback for development
-    if (!env.JWT_SECRET) {
-      console.warn('警告：JWT_SECRET 環境變數未設置，使用預設值（僅用於開發）');
+    const secret = env.JWT_SECRET;
+    if (!secret) {
+      console.error("Critical Security Error: JWT_SECRET is not configured in environment variables. Cannot verify JWT token.");
+      return null;
     }
     const base64UrlEncode = (str) => {
       return btoa(str)

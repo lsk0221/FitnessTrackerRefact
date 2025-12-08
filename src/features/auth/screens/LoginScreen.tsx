@@ -119,11 +119,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
     }
   );
 
-  // Debug: Output iOS Client ID and redirectUri status
-  console.log('📱 Platform:', Platform.OS);
-  console.log('🔑 iOS Client ID configured:', !!GOOGLE_IOS_CLIENT_ID);
-  console.log('🔗 REVERSED_CLIENT_ID:', reversedClientId);
-  console.log('🔗 Redirect URI:', redirectUri);
+  // Debug logs removed for production security
+  // 調試日誌已移除以符合生產環境安全要求
 
   // Diagnostic logs - 診斷日誌（僅在需要時啟用）
   // useEffect(() => {
@@ -392,7 +389,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
     try {
       await signInLocal();
       // 成功進入本地模式會自動導航到主應用程式
-      console.log('成功進入本地模式');
+      // Debug log removed for production security
     } catch (error) {
       showAlert({
         title: '錯誤',
@@ -409,9 +406,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
 
   // Handle Google login button press
   const handleGoogleLoginPress = async () => {
-    console.log('🔵 Google Login Button Pressed');
-    console.log('🔵 Request object exists:', !!request);
-    console.log('🔵 iOS Client ID configured:', !!GOOGLE_IOS_CLIENT_ID);
+    // Debug logs removed for production security
+    // 調試日誌已移除以符合生產環境安全要求
     
     if (!request || !GOOGLE_IOS_CLIENT_ID) {
       console.error('❌ Google login not configured properly');
@@ -423,10 +419,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
     }
 
     try {
-      console.log('🔵 Calling promptAsync()...');
+      // Debug logs removed for production security
       const result = await promptAsync();
-      console.log('🔵 promptAsync() completed, result:', result);
-      console.log('🔵 Result type:', result?.type);
+      // Debug logs removed for production security
     } catch (error: any) {
       console.error('❌ Google login error details:', error);
       console.error('❌ Error message:', error.message);
@@ -448,7 +443,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, theme }) =
         title: '成功',
         message: '已清除所有本地數據，請重新啟動應用',
       });
-      console.log('✅ AsyncStorage cleared successfully');
+      // Debug log removed for production security
     } catch (error) {
       showAlert({
         title: '錯誤',
